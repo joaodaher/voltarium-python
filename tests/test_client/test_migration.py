@@ -25,7 +25,7 @@ class TestMigrationClient(SandboxTestCase):
         create_request = CreateMigrationRequestFactory.build(
             retailer_agent_code=self.agent_id,
             retailer_profile_code=self.profile_id,
-            utility_agent_code=self.concessionaria_id,
+            utility_agent_code=self.utility_id,
         )
 
         result = await self.client.create_migration(
@@ -87,7 +87,7 @@ class TestMigrationClient(SandboxTestCase):
             CreateMigrationRequestFactory.build(
                 retailer_agent_code=self.agent_id,
                 retailer_profile_code=self.profile_id,
-                utility_agent_code=self.concessionaria_id,
+                utility_agent_code=self.utility_id,
             )
             for _ in range(k)
         ]
@@ -127,4 +127,4 @@ class TestMigrationClient(SandboxTestCase):
         print("\n✓ Integration test completed successfully!")
         print(f"   Total migrations created: {len(migrations)}")
         print(f"   Using agent: {self.agent_id} (profile: {self.profile_id})")
-        print(f"   Using concessionaria: {self.concessionaria_id}")
+        print(f"   Using concessionaria: {self.utility_id}")

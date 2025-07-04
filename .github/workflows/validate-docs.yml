@@ -20,7 +20,7 @@ jobs:
       - name: Validate MkDocs
         run: |
           echo "Validating MkDocs configuration and building documentation..."
-          if ! task docs:build; then
+          if ! task docs-build; then
             echo "Error: MkDocs validation failed! Please check:"
             echo "  1. All referenced files in mkdocs.yml exist"
             echo "  2. All internal links are valid"

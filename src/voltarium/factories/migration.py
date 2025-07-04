@@ -15,7 +15,7 @@ from voltarium.models.migration import (
     MigrationListItem,
     UpdateMigrationRequest,
 )
-from voltarium.sandbox import CONCESSIONARIAS, VAREJISTAS
+from voltarium.sandbox import RETAILERS, UTILITIES
 
 
 class BaseMigrationFactory(factory.Factory):
@@ -25,7 +25,7 @@ class BaseMigrationFactory(factory.Factory):
         model = BaseMigration
 
     class Params:
-        sandbox_agent_credentials = FuzzyChoice(VAREJISTAS)
+        sandbox_agent_credentials = FuzzyChoice(RETAILERS)
 
     # Generate real agent credentials for testing
     @factory.lazy_attribute
@@ -38,8 +38,8 @@ class BaseMigrationFactory(factory.Factory):
 
     @factory.lazy_attribute
     def utility_agent_code(obj: Any) -> int:
-        concessionaria = random.choice(CONCESSIONARIAS)
-        return concessionaria.agent_code
+        utility = random.choice(UTILITIES)
+        return utility.agent_code
 
     # Required fields
     migration_id = factory.Faker("uuid4")
@@ -113,7 +113,7 @@ class CreateMigrationRequestFactory(factory.Factory):  # type: ignore
         model = CreateMigrationRequest
 
     class Params:
-        sandbox_agent_credentials = FuzzyChoice(VAREJISTAS)  # type: ignore
+        sandbox_agent_credentials = FuzzyChoice(RETAILERS)  # type: ignore
 
     # Generate real agent credentials for testing
     @factory.lazy_attribute  # type: ignore
@@ -126,8 +126,8 @@ class CreateMigrationRequestFactory(factory.Factory):  # type: ignore
 
     @factory.lazy_attribute  # type: ignore
     def utility_agent_code(obj: Any) -> int:
-        concessionaria = random.choice(CONCESSIONARIAS)
-        return concessionaria.agent_code
+        utility = random.choice(UTILITIES)
+        return utility.agent_code
 
     consumer_unit_code = factory.Faker("numerify", text="########")
     document_type = FuzzyChoice(["CNPJ"])  # type: ignore
@@ -156,7 +156,7 @@ class UpdateMigrationRequestFactory(factory.Factory):  # type: ignore
         model = UpdateMigrationRequest
 
     class Params:
-        sandbox_agent_credentials = FuzzyChoice(VAREJISTAS)  # type: ignore
+        sandbox_agent_credentials = FuzzyChoice(RETAILERS)  # type: ignore
 
     # Generate real agent credentials for testing
     @factory.lazy_attribute  # type: ignore
