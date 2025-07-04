@@ -1,0 +1,77 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Install production dependencies
+    cmds:
+      - uv sync --no-dev
+
+  install-dev:
+    desc: Install development dependencies
+    cmds:
+      - uv sync --group docs --group dev
+
+  install-docs:
+    desc: Install documentation dependencies
+    cmds:
+      - uv sync --group docs
+
+  test:
+    desc: Run tests
+    cmds:
+      - uv run pytest
+
+  lint:
+    desc: Run linting
+    cmds:
+      - uv run ruff check .
+      - uv run ruff format --check .
+
+  format:
+    desc: Format code
+    cmds:
+      - uv run ruff format .
+      - uv run ruff check --fix .
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf build/
+      - rm -rf dist/
+      - rm -rf src/*.egg-info/
+      - rm -rf .coverage
+      - rm -rf htmlcov/
+      - rm -rf .pytest_cache/
+      - rm -rf .ruff_cache/
+      - find . -type d -name __pycache__ -delete
+      - find . -type f -name "*.pyc" -delete
+
+  build:
+    desc: Build package
+    deps: [clean]
+    cmds:
+      - uv build
+
+  publish:
+    desc: Publish to PyPI
+    deps: [build]
+    cmds:
+      - uv publish
+
+  docs-build:
+    desc: Build the documentation
+    deps: [install-docs]
+    cmds:
+      - uv run mkdocs build --config-file ./mkdocs.yml
+
+  docs-serve:
+    desc: Serve the documentation locally
+    deps: [install-docs]
+    cmds:
+      - uv run mkdocs serve --config-file ./mkdocs.yml
+
+  docs-deploy:
+    desc: Deploy documentation to GitHub Pages
+    deps: [install-docs]
+    cmds:
+      - uv run mkdocs gh-deploy --config-file ./mkdocs.yml

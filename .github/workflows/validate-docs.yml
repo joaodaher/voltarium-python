@@ -1,0 +1,29 @@
+name: Validate Documentation
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+
+jobs:
+  validate_mkdocs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-env
+      - name: Check docs directory exists
+        run: |
+          if [ ! -d "docs" ]; then
+            echo "Error: docs directory is missing!"
+            exit 1
+          fi
+      - name: Validate MkDocs
+        run: |
+          echo "Validating MkDocs configuration and building documentation..."
+          if ! task docs-build; then
+            echo "Error: MkDocs validation failed! Please check:"
+            echo "  1. All referenced files in mkdocs.yml exist"
+            echo "  2. All internal links are valid"
+            echo "  3. All markdown syntax is correct"
+            exit 1
+          fi
