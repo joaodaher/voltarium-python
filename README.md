@@ -4,57 +4,28 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-**Voltarium** is an asynchronous Python 3.13 client for the CCEE (Brazilian Electric Energy Commercialization Chamber) API. Built with modern Python practices, it provides a clean, type-safe interface for interacting with CCEE services.
+**Modern, asynchronous Python client for the CCEE (Brazilian Electric Energy Commercialization Chamber) API.** Built with Python 3.13+ and designed for high-performance energy sector applications.
 
-## 🚀 Features
+## 🚀 Key Features
 
-- **Asynchronous**: Built with `httpx` and `asyncio` for high performance
-- **Type Safe**: Full type hints with Pydantic models
-- **Robust**: Automatic token management with retry logic using Tenacity
-- **Modern**: Python 3.13+ with UV for dependency management
-- **Well Tested**: Comprehensive test suite with pytest
+- **🔥 Asynchronous**: Built with `httpx` and `asyncio` for maximum performance
+- **🔒 Type Safe**: Complete type hints with Pydantic models for bulletproof code
+- **🛡️ Robust**: Automatic OAuth2 token management with intelligent retry logic
+- **🏗️ Real Staging Data**: 60+ authentic CCEE credentials for comprehensive testing
+- **⚡ Modern**: Python 3.13+ with UV for lightning-fast dependency management
+- **✅ Production Ready**: Comprehensive test suite and error handling
 
 ## 📦 Installation
 
-### Using UV (Recommended)
-
 ```bash
+# Using UV (recommended)
 uv add voltarium
-```
 
-### Using pip
-
-```bash
+# Using pip
 pip install voltarium
 ```
 
-## 🔧 Development Setup
-
-This project uses UV for dependency management, Task for running commands, and Ruff for linting/formatting.
-
-```bash
-# Clone the repository
-git clone https://github.com/joaodaher/voltarium-python.git
-cd voltarium-python
-
-# Install UV (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install dependencies
-task install-dev
-
-# Run tests
-task test
-
-# Lint and format
-task lint
-task format
-
-# Type checking
-task mypy
-```
-
-## 🚀 Quick Start
+## 🔥 Quick Start
 
 ```python
 import asyncio
@@ -66,118 +37,88 @@ async def main():
         client_id="your_client_id",
         client_secret="your_client_secret"
     ) as client:
-        # Perform a health check
-        health = await client.health_check()
-        print(f"API Status: {health['status']}")
+        # List retailer migrations with automatic pagination
+        migrations = client.list_migrations(
+            initial_reference_month="2024-01",
+            final_reference_month="2024-12",
+            agent_code="12345",
+            profile_code="67890"
+        )
+
+        # Stream results efficiently
+        async for migration in migrations:
+            print(f"Migration {migration.migration_id}: {migration.migration_status}")
 
 asyncio.run(main())
 ```
 
-## 📖 Documentation
+## 🏗️ Real Staging Environment
 
-### Authentication
-
-Voltarium handles OAuth2 authentication automatically:
+Test with **real CCEE data** using our comprehensive staging environment:
 
 ```python
-from voltarium.auth import AuthClient
+from voltarium.sandbox import RETAILERS, UTILITIES
 
-async with AuthClient(
-    base_url="https://api.ccee.org.br",
-    client_id="your_client_id",
-    client_secret="your_client_secret"
-) as auth:
-    # Token is automatically managed
-    headers = await auth.get_auth_header()
-    print(headers)  # {'Authorization': 'Bearer <token>'}
+# Use real staging credentials
+retailer = RETAILERS[0]  # 30+ available retailers
+utility = UTILITIES[0]   # 30+ available utilities
+
+# Test with actual CCEE staging API
+async with VoltariumClient(
+    base_url="https://staging.ccee.org.br",
+    client_id=retailer.client_id,
+    client_secret=retailer.client_secret
+) as client:
+    # All operations work with real data
+    migrations = await client.list_migrations(...)
 ```
 
-### Error Handling
+## 📚 Comprehensive Documentation
 
-Voltarium provides specific exception types:
+Visit our **[complete documentation](https://voltarium.github.io/voltarium-python/)** for:
 
-```python
-from voltarium.exceptions import (
-    VoltariumError,
-    AuthenticationError,
-    NotFoundError,
-    ValidationError,
-    RateLimitError,
-    ServerError
-)
+- **[About](https://voltarium.github.io/voltarium-python/about/)** - Architecture and detailed features
+- **[Supported Endpoints](https://voltarium.github.io/voltarium-python/endpoints/)** - Complete API reference
+- **[Examples](https://voltarium.github.io/voltarium-python/examples/)** - Practical usage patterns
+- **[Staging Environment](https://voltarium.github.io/voltarium-python/staging/)** - Real data testing & roadmap
 
-try:
-    async with VoltariumClient(...) as client:
-        result = await client.health_check()
-except AuthenticationError:
-    print("Invalid credentials")
-except NotFoundError:
-    print("Resource not found")
-except RateLimitError:
-    print("Rate limit exceeded")
-except VoltariumError as e:
-    print(f"API error: {e.message}")
-```
-
-## 🧪 Testing
-
-Run the test suite:
+## 🛠️ Development
 
 ```bash
-# Run all tests
+# Clone and setup
+git clone https://github.com/joaodaher/voltarium-python.git
+cd voltarium-python
+
+# Install dependencies (requires UV)
+task install-dev
+
+# Run tests
 task test
 
-# Run with coverage
-task test-cov
-
-# Run specific test file
-uv run pytest tests/test_auth.py -v
+# Quality checks
+task lint && task format && task mypy
 ```
 
-## 🛠️ Available Task Commands
+## 🎯 Current Status
 
-```bash
-task --list         # Show all available commands
-task install        # Install production dependencies
-task install-dev    # Install development dependencies
-task test           # Run tests
-task test-cov       # Run tests with coverage
-task lint           # Run linting
-task format         # Format code
-task mypy           # Run type checking
-task clean          # Clean build artifacts
-task build          # Build package
-task all            # Run all quality checks
-task ci             # Run CI pipeline tasks
-```
+**Alpha Release** - Core migration endpoints fully supported:
 
-## 📋 Project Status
-
-This project is in **alpha** development. The API may change between versions.
-
-### Planned Features
-
-- [ ] Full CCEE API endpoint coverage
-- [ ] Migration endpoints (`migracoes`)
-- [ ] Data validation models
-- [ ] Comprehensive documentation
-- [ ] Usage examples and tutorials
+✅ **Retailer Migrations** - Complete CRUD operations
+🚧 **Utility Migrations** - Under development
+📋 **Additional Endpoints** - [See roadmap](https://voltarium.github.io/voltarium-python/staging/#roadmap)
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions! Please see our [documentation](https://voltarium.github.io/voltarium-python/) for details on:
+
+- Feature roadmap and priorities
+- Development setup and guidelines
+- Testing with real staging data
 
 ## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE.md](LICENSE.md) file for details.
+Apache License 2.0 - see [LICENSE.md](LICENSE.md) for details.
 
-## 🙏 Acknowledgments
+---
 
-- Inspired by [PyGithub](https://github.com/pygithub/PyGithub) for client design patterns
-- Built with [gcp-pilot](https://github.com/flamingo-run/gcp-pilot) project structure inspiration
-- Uses [Astral UV](https://github.com/astral-sh/uv) for fast dependency management
-- Code quality with [Ruff](https://github.com/astral-sh/ruff)
+**Built for the Brazilian energy sector** 🇧🇷 | **Powered by modern Python** 🐍
