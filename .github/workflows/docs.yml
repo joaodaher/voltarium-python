@@ -21,5 +21,6 @@ jobs:
       - uses: ./.github/actions/setup-env
       - name: Build documentation
         run: task docs-build
-      - name: Deploy to GitHub Pages
-        run: task docs-deploy
+      # Disabled temporarily until we have a dedicated domain
+      # - name: Deploy to GitHub Pages
+      #   run: task docs-deploy
