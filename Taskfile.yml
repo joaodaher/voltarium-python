@@ -1,0 +1,83 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Install production dependencies
+    cmds:
+      - uv sync --no-dev
+
+  install-dev:
+    desc: Install development dependencies
+    cmds:
+      - uv sync
+
+  test:
+    desc: Run tests
+    cmds:
+      - uv run pytest
+
+  lint:
+    desc: Run linting
+    cmds:
+      - uv run ruff check .
+      - uv run ruff format --check .
+      - uv run mypy src/voltarium
+
+  format:
+    desc: Format code
+    cmds:
+      - uv run ruff format .
+      - uv run ruff check --fix .
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf build/
+      - rm -rf dist/
+      - rm -rf src/*.egg-info/
+      - rm -rf .coverage
+      - rm -rf htmlcov/
+      - rm -rf .pytest_cache/
+      - rm -rf .mypy_cache/
+      - rm -rf .ruff_cache/
+      - find . -type d -name __pycache__ -delete
+      - find . -type f -name "*.pyc" -delete
+
+  build:
+    desc: Build package
+    deps: [clean]
+    cmds:
+      - uv build
+
+  publish:
+    desc: Publish to PyPI
+    deps: [build]
+    cmds:
+      - uv publish
+
+  dev-setup:
+    desc: Setup development environment
+    deps: [install-dev]
+    cmds:
+      - cmd: echo "Development environment setup complete!"
+        silent: true
+      - cmd: echo "Run 'task test' to run tests"
+        silent: true
+      - cmd: echo "Run 'task lint' to check code quality"
+        silent: true
+
+  all:
+    desc: Run all quality checks
+    deps: [clean, install-dev, lint, mypy, test]
+    cmds:
+      - cmd: echo "All quality checks completed successfully!"
+        silent: true
+
+  # Convenience aliases
+  check:
+    desc: Alias for 'all' - run all quality checks
+    deps: [all]
+
+  ci:
+    desc: Run CI pipeline tasks
+    deps: [install-dev, lint, mypy, test-cov]
