@@ -1,0 +1,45 @@
+name: Tag & Release Package
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-env
+      - name: Detect version upgrade
+        id: versioning
+        run: |
+          package_version=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "package_version=$package_version" >> $GITHUB_OUTPUT
+          upgraded=$(git tag --list | grep -q "${package_version}$" && echo "false" || echo "true")
+          echo "upgraded=$upgraded" >> $GITHUB_OUTPUT
+          pre_release=$([[ $package_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo "false" || echo "true")
+          echo "pre_release=$pre_release" >> $GITHUB_OUTPUT
+          main_branch_release=$([[ $pre_release == "false" && $GITHUB_REF_NAME == "main" ]] && echo "true" || echo "false")
+          alternative_branch_release=$([[ $pre_release == "true" && $GITHUB_REF_NAME != "main" ]] && echo "true" || echo "false")
+          should_release=$([[ $upgraded == "true" && ($main_branch_release == "true" || $alternative_branch_release == "true") ]] && echo "true" || echo "false")
+          echo "should_release=$should_release" >> $GITHUB_OUTPUT
+          echo "upgraded=$upgraded"
+          echo "pre_release=$pre_release"
+          echo "git_ref=$GITHUB_REF_NAME"
+          echo "main_branch_release=$main_branch_release"
+          echo "alternative_branch_release=$alternative_branch_release"
+          echo "should_release=$should_release"
+      - name: Create Release
+        if: ${{ steps.versioning.outputs.should_release == 'true' }}
+        run: gh release create ${{ steps.versioning.outputs.package_version }} --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & Publish package
+        if: ${{ steps.versioning.outputs.should_release == 'true' }}
+        run: |
+          task build
+          uv publish

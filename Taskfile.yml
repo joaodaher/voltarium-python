@@ -9,7 +9,12 @@ tasks:
   install-dev:
     desc: Install development dependencies
     cmds:
-      - uv sync
+      - uv sync --group docs --group dev
+
+  install-docs:
+    desc: Install documentation dependencies
+    cmds:
+      - uv sync --group docs
 
   test:
     desc: Run tests
@@ -21,7 +26,6 @@ tasks:
     cmds:
       - uv run ruff check .
       - uv run ruff format --check .
-      - uv run mypy src/voltarium
 
   format:
     desc: Format code
@@ -38,7 +42,6 @@ tasks:
       - rm -rf .coverage
       - rm -rf htmlcov/
       - rm -rf .pytest_cache/
-      - rm -rf .mypy_cache/
       - rm -rf .ruff_cache/
       - find . -type d -name __pycache__ -delete
       - find . -type f -name "*.pyc" -delete
@@ -55,29 +58,20 @@ tasks:
     cmds:
       - uv publish
 
-  dev-setup:
-    desc: Setup development environment
-    deps: [install-dev]
+  docs-build:
+    desc: Build the documentation
+    deps: [install-docs]
     cmds:
-      - cmd: echo "Development environment setup complete!"
-        silent: true
-      - cmd: echo "Run 'task test' to run tests"
-        silent: true
-      - cmd: echo "Run 'task lint' to check code quality"
-        silent: true
+      - uv run mkdocs build --config-file ./mkdocs.yml
 
-  all:
-    desc: Run all quality checks
-    deps: [clean, install-dev, lint, mypy, test]
+  docs-serve:
+    desc: Serve the documentation locally
+    deps: [install-docs]
     cmds:
-      - cmd: echo "All quality checks completed successfully!"
-        silent: true
+      - uv run mkdocs serve --config-file ./mkdocs.yml
 
-  # Convenience aliases
-  check:
-    desc: Alias for 'all' - run all quality checks
-    deps: [all]
-
-  ci:
-    desc: Run CI pipeline tasks
-    deps: [install-dev, lint, mypy, test-cov]
+  docs-deploy:
+    desc: Deploy documentation to GitHub Pages
+    deps: [install-docs]
+    cmds:
+      - uv run mkdocs gh-deploy --config-file ./mkdocs.yml

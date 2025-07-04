@@ -35,6 +35,10 @@ dev = [
     "pytest-cov>=6.2.1",
     "ruff>=0.12.1",
 ]
+docs = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.15",
+]
 
 
 [project.urls]

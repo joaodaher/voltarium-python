@@ -1,0 +1,19 @@
+name: Setup Voltarium Environment
+description: Common environment setup for all Voltarium jobs
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+    - name: Set up Python
+      run: uv python install 3.13
+      shell: bash
+    - name: Install Task
+      uses: arduino/setup-task@v2
+      with:
+        version: 3.x
+    - name: Install dependencies
+      run: task install-dev
+      shell: bash

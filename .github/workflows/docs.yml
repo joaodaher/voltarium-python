@@ -1,0 +1,25 @@
+name: Build GitHub Pages
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build_mkdocs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-env
+      - name: Build documentation
+        run: task docs-build
+      - name: Deploy to GitHub Pages
+        run: task docs-deploy
