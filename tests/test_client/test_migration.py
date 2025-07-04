@@ -1,3 +1,4 @@
+import asyncio
 from datetime import timedelta
 
 from tests.base import SandboxTestCase
@@ -92,15 +93,20 @@ class TestMigrationClient(SandboxTestCase):
             for _ in range(k)
         ]
 
-        for i, create_request in enumerate(bulk_requests):
-            result = await self.client.create_migration(
+        tasks = [
+            self.client.create_migration(
                 migration_data=create_request,
                 agent_code=self.agent_id,
                 profile_code=self.profile_id,
             )
+            for create_request in bulk_requests
+        ]
+
+        results = await asyncio.gather(*tasks)
+
+        for i, result in enumerate(results):
             self.assertIsNotNone(result)
             migrations.append(result)
-
             print(f"✓ Created bulk migration {i + 1}: {result}")
 
         # 5. List Migrations Test
