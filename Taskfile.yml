@@ -41,10 +41,6 @@ tasks:
       - rm -rf src/*.egg-info/
       - rm -rf .coverage
       - rm -rf htmlcov/
-      - rm -rf .pytest_cache/
-      - rm -rf .ruff_cache/
-      - find . -type d -name __pycache__ -delete
-      - find . -type f -name "*.pyc" -delete
 
   build:
     desc: Build package
