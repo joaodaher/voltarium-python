@@ -47,13 +47,6 @@ Repository = "https://github.com/joaodaher/voltarium-python"
 Documentation = "https://github.com/joaodaher/voltarium-python"
 "Bug Tracker" = "https://github.com/joaodaher/voltarium-python/issues"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/voltarium"]
-
 [tool.ruff]
 target-version = "py313"
 line-length = 120
@@ -143,3 +136,10 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
+
+[build-system]
+requires = ["uv_build>=0.7.19,<0.8.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+package = true
