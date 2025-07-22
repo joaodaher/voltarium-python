@@ -5,6 +5,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from voltarium.models.constants import MigrationStatus
+
 
 class BaseMigration(BaseModel):
     """Base migration model with common fields."""
@@ -22,7 +24,7 @@ class BaseMigration(BaseModel):
     retailer_agent_code: int = Field(alias="codigoAgenteVarejista", description="Retailer agent code")
     request_date: datetime = Field(alias="dataSolicitacao", description="Request date")
     retailer_profile_code: int = Field(alias="codigoPerfilVarejista", description="Retailer profile code")
-    migration_status: str = Field(alias="statusMigracao", description="Migration status")
+    migration_status: MigrationStatus = Field(alias="statusMigracao", description="Migration status")
     submarket: str | None = Field(default=None, alias="submercado", description="Submarket")
     dhc_value: float | None = Field(default=None, alias="valorDHC", description="DHC value")
     musd_value: float | None = Field(default=None, alias="valorMusd", description="MUSD value")
