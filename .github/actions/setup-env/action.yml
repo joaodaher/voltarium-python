@@ -1,6 +1,11 @@
 name: Setup Voltarium Environment
 description: Common environment setup for all Voltarium jobs
 
+inputs:
+  github-token:
+    description: 'GitHub token for authentication'
+    required: false
+
 runs:
   using: "composite"
   steps:
@@ -14,6 +19,7 @@ runs:
       uses: arduino/setup-task@v2
       with:
         version: 3.x
+        repo-token: ${{ inputs.github-token }}
     - name: Install dependencies
       run: task install-dev
       shell: bash

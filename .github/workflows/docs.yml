@@ -19,6 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-env
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build documentation
         run: task docs-build
       # Disabled temporarily until we have a dedicated domain
