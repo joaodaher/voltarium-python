@@ -101,6 +101,16 @@ class CreateMigrationRequest(BaseModel):
             raise ValueError("reference_month must be in the format YYYY-MM") from exc
         return v
 
+    @field_validator("denunciation_date")
+    def validate_denunciation_date(cls, v: str) -> str:
+        """Validate denunciation date format."""
+        # Validate the date format (YYYY-MM-DD) and that it's a valid date
+        try:
+            datetime.strptime(v, "%Y-%m-%d")
+        except ValueError as exc:
+            raise ValueError("denunciation_date must be in the format YYYY-MM-DD") from exc
+        return v
+
 
 class UpdateMigrationRequest(BaseModel):
     """Request model for updating a migration."""
