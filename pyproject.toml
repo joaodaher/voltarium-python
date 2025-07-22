@@ -33,6 +33,7 @@ dev = [
     "pytest>=8.4.1",
     "pytest-asyncio>=1.0.0",
     "pytest-cov>=6.2.1",
+    "pytest-rerunfailures>=15.1",
     "ruff>=0.12.1",
 ]
 docs = [
@@ -103,8 +104,8 @@ module = "tests.*"
 disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
-minversion = "7.4"
 addopts = [
+    "--reruns=3",
     "--strict-markers",
     "--strict-config",
     "--cov=voltarium",
@@ -114,10 +115,6 @@ addopts = [
 ]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-markers = [
-    "slow: marks tests as slow",
-    "integration: marks tests as integration tests",
-]
 
 [tool.coverage.run]
 source = ["src"]
@@ -126,15 +123,6 @@ branch = true
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "if settings.DEBUG",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
 ]
 
 [build-system]

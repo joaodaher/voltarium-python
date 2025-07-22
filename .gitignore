@@ -162,12 +162,6 @@ cython_debug/
 #  The actual code is the *.py file.
 .idea/
 
-# VSCode
-.vscode/
-
-# UV
-uv.lock
-
 # OS specific
 .DS_Store
 .DS_Store?

@@ -9,5 +9,14 @@ class Submarket(StrEnum):
     NORTH = "N"
 
 
+class MigrationStatus(StrEnum):
+    CREATED = "CRIADA"
+    COMPLETED = "CONCLUIDA"
+    REJECTED = "REPROVADA"
+    CLOSED = "ENCERRADA"
+    CANCELLED = "CANCELADA"
+    EXPIRED = "EXPIRADA"
+
+
 API_BASE_URL = "https://api-abm.ccee.org.br"
 API_BASE_URL_STAGING = "https://sandbox-api-abm.ccee.org.br"

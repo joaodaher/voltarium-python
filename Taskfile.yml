@@ -17,6 +17,11 @@ tasks:
     cmds:
       - uv sync --group docs
 
+  update:
+    desc: Update dependencies
+    cmds:
+      - uv lock --upgrade
+
   test:
     desc: Run tests
     deps: [install-dev]
