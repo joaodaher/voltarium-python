@@ -9,14 +9,14 @@ import httpx
 from httpx import Response
 from tenacity import AsyncRetrying, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from .exceptions import (
+from voltarium.exceptions import (
     AuthenticationError,
     NotFoundError,
     RateLimitError,
     ValidationError,
     VoltariumError,
 )
-from .models import (
+from voltarium.models import (
     ApiHeaders,
     CreateMigrationRequest,
     ListMigrationsParams,

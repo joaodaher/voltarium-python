@@ -4,19 +4,12 @@ This package provides an asynchronous Python client for the CCEE
 (Brazilian Electric Energy Commercialization Chamber) API.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "joaodaher"
-__email__ = "joaodaher@example.com"
+__email__ = "joao@daher.dev"
 
-from .client import (
-    CreateMigrationRequest,
-    MigrationItem,
-    MigrationListItem,
-    Token,
-    UpdateMigrationRequest,
-    VoltariumClient,
-)
-from .exceptions import (
+from voltarium.client import VoltariumClient
+from voltarium.exceptions import (
     AuthenticationError,
     NotFoundError,
     RateLimitError,
@@ -24,6 +17,14 @@ from .exceptions import (
     ValidationError,
     VoltariumError,
 )
+from voltarium.models import (
+    CreateMigrationRequest,
+    MigrationItem,
+    MigrationListItem,
+    Token,
+    UpdateMigrationRequest,
+)
+from voltarium.models.constants import MigrationStatus, Submarket
 
 __all__ = [
     # Client
@@ -34,6 +35,9 @@ __all__ = [
     "UpdateMigrationRequest",
     "MigrationListItem",
     "MigrationItem",
+    # Constants
+    "MigrationStatus",
+    "Submarket",
     # Exceptions
     "VoltariumError",
     "AuthenticationError",
