@@ -1,5 +1,6 @@
 """Voltarium factories package."""
 
+from .contracts import CreateContractRequestFactory
 from .migration import (
     BaseMigrationFactory,
     CreateMigrationRequestFactory,
@@ -16,4 +17,5 @@ __all__ = [
     "CreateMigrationRequestFactory",
     "UpdateMigrationRequestFactory",
     "MigrationItemFactory",
+    "CreateContractRequestFactory",
 ]

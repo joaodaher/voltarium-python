@@ -33,7 +33,6 @@ from voltarium import VoltariumClient
 
 async def main():
     async with VoltariumClient(
-        base_url="https://api.ccee.org.br",
         client_id="your_client_id",
         client_secret="your_client_secret"
     ) as client:
@@ -58,6 +57,7 @@ Test with **real CCEE data** using our comprehensive staging environment:
 
 ```python
 from voltarium.sandbox import RETAILERS, UTILITIES
+from voltarium import SANDBOX_BASE_URL
 
 # Use real staging credentials
 retailer = RETAILERS[0]  # 30+ available retailers
@@ -65,7 +65,7 @@ utility = UTILITIES[0]   # 30+ available utilities
 
 # Test with actual CCEE staging API
 async with VoltariumClient(
-    base_url="https://staging.ccee.org.br",
+    base_url=SANDBOX_BASE_URL,
     client_id=retailer.client_id,
     client_secret=retailer.client_secret
 ) as client:

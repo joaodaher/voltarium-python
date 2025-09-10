@@ -29,6 +29,9 @@ class ValidationError(VoltariumError):
         self.code = code
         self.message = message
 
+    def __str__(self) -> str:
+        return f"Validation error: {self.code} - {self.message}"
+
 
 class RateLimitError(VoltariumError):
     """Raised when rate limit is exceeded (429)."""

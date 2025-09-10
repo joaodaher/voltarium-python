@@ -18,13 +18,19 @@ from voltarium.exceptions import (
 )
 from voltarium.models import (
     ApiHeaders,
+    Contract,
+    CreateContractRequest,
     CreateMigrationRequest,
+    ListContractsParams,
     ListMigrationsParams,
     MigrationItem,
     MigrationListItem,
     Token,
     UpdateMigrationRequest,
 )
+
+PRODUCTION_BASE_URL = "https://api.ccee.org.br"
+SANDBOX_BASE_URL = "https://staging.ccee.org.br"
 
 
 class VoltariumClient:
@@ -33,9 +39,9 @@ class VoltariumClient:
     def __init__(
         self,
         *,
-        base_url: str,
         client_id: str,
         client_secret: str,
+        base_url: str = PRODUCTION_BASE_URL,
         timeout: float = 30.0,
         max_retries: int = 3,
     ) -> None:
@@ -191,8 +197,8 @@ class VoltariumClient:
         self,
         initial_reference_month: str,
         final_reference_month: str,
-        agent_code: str,
-        profile_code: str,
+        agent_code: str | int,
+        profile_code: str | int,
         consumer_unit_code: str | None = None,
         migration_status: str | None = None,
     ) -> AsyncGenerator[MigrationListItem]:
@@ -256,8 +262,8 @@ class VoltariumClient:
     async def create_migration(
         self,
         migration_data: CreateMigrationRequest,
-        agent_code: str,
-        profile_code: str,
+        agent_code: str | int,
+        profile_code: str | int,
     ) -> MigrationItem:
         """Create a new migration.
 
@@ -289,8 +295,8 @@ class VoltariumClient:
 
     async def get_migration(
         self,
-        agent_code: str,
-        profile_code: str,
+        agent_code: str | int,
+        profile_code: str | int,
         migration_id: str,
     ) -> MigrationItem:
         """Get a migration by ID.
@@ -321,8 +327,8 @@ class VoltariumClient:
         self,
         migration_id: str,
         migration_data: UpdateMigrationRequest,
-        agent_code: str,
-        profile_code: str,
+        agent_code: str | int,
+        profile_code: str | int,
     ) -> MigrationItem:
         """Update a migration.
 
@@ -356,8 +362,8 @@ class VoltariumClient:
     async def delete_migration(
         self,
         migration_id: str,
-        agent_code: str,
-        profile_code: str,
+        agent_code: str | int,
+        profile_code: str | int,
     ) -> None:
         """Delete a migration.
 
@@ -377,6 +383,112 @@ class VoltariumClient:
             path=f"/v1/varejista/migracoes/{migration_id}",
             headers=headers_model.model_dump(by_alias=True),
         )
+
+    # Contracts endpoints
+
+    async def list_contracts(
+        self,
+        initial_reference_month: str,
+        final_reference_month: str,
+        agent_code: str | int,
+        profile_code: str | int,
+        utility_agent_code: str | int | None = None,
+        consumer_unit_code: str | None = None,
+        contract_status: str | None = None,
+    ) -> AsyncGenerator[Contract]:
+        """List retailer contracts with filtering and pagination.
+
+        Mirrors list_migrations pattern.
+        """
+        headers_model = ApiHeaders(
+            agent_code=str(agent_code),
+            profile_code=str(profile_code),
+        )
+
+        params_model = ListContractsParams(
+            initial_reference_month=initial_reference_month,
+            final_reference_month=final_reference_month,
+            retailer_profile_code=str(profile_code),
+            utility_agent_code=str(utility_agent_code) if utility_agent_code is not None else None,
+            consumer_unit_code=consumer_unit_code,
+            contract_status=contract_status,
+        )
+
+        async def _get_page(page_index: str | None = None) -> Response:
+            if page_index is not None:
+                params_model.next_page_index = page_index
+            else:
+                params_model.next_page_index = None
+
+            return await self._request(
+                method="GET",
+                path="/v1/varejista/contratos",
+                headers=headers_model.model_dump(by_alias=True),
+                params=params_model.model_dump(by_alias=True, exclude_none=True),
+            )
+
+        page_index = None
+        while True:
+            response = await _get_page(page_index)
+            data = response.json()
+
+            for contract_data in data.get("contratos", data.get("contrato", [])):
+                yield Contract.model_validate(contract_data)
+
+            page_index = data.get("indexProximaPagina")
+            if page_index is None:
+                break
+
+    async def get_contract(
+        self,
+        contract_id: str,
+        agent_code: str | int,
+        profile_code: str | int,
+    ) -> Contract:
+        """Get a contract by ID."""
+        headers_model = ApiHeaders(
+            agent_code=str(agent_code),
+            profile_code=str(profile_code),
+        )
+
+        response = await self._request(
+            method="GET",
+            path=f"/v1/varejista/contratos/{contract_id}",
+            headers=headers_model.model_dump(by_alias=True),
+        )
+
+        body = response.json()
+        # Some endpoints return array for single item; support both
+        if isinstance(body, list) and body:
+            return Contract.model_validate(body[0])
+        return Contract.model_validate(body)
+
+    async def create_contract(
+        self,
+        contract_data: CreateContractRequest,
+        agent_code: str | int,
+        profile_code: str | int,
+    ) -> Contract:
+        """Create a retailer contract (POST /v1/varejista/contratos)."""
+        headers_model = ApiHeaders(
+            agent_code=str(agent_code),
+            profile_code=str(profile_code),
+        )
+
+        # Use model_dump with by_alias=True to match Portuguese field names
+        json_data = contract_data.model_dump(by_alias=True, exclude_none=True)
+
+        response = await self._request(
+            method="POST",
+            path="/v1/varejista/contratos",
+            headers=headers_model.model_dump(by_alias=True),
+            json=json_data,
+        )
+
+        body = response.json()
+        if isinstance(body, list) and body:
+            return Contract.model_validate(body[0])
+        return Contract.model_validate(body)
 
     async def __aenter__(self) -> Self:
         """Async context manager entry."""

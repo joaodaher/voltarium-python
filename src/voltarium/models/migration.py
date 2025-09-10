@@ -19,8 +19,8 @@ class BaseMigration(BaseModel):
         alias="codigoAgenteConcessionariaUnidadeConsumidora", description="Utility agent consumer unit code"
     )
     utility_agent_code: int = Field(alias="codigoAgenteConcessionaria", description="Utility agent code")
-    document_type: str = Field(alias="tipoDocumento", description="Document type")
-    document_number: str = Field(alias="numeroDocumento", description="Document number")
+    document_type: str | None = Field(default=None, alias="tipoDocumento", description="Document type")
+    document_number: str | None = Field(default=None, alias="numeroDocumento", description="Document number")
     retailer_agent_code: int = Field(alias="codigoAgenteVarejista", description="Retailer agent code")
     request_date: datetime = Field(alias="dataSolicitacao", description="Request date")
     retailer_profile_code: int = Field(alias="codigoPerfilVarejista", description="Retailer profile code")
