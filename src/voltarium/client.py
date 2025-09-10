@@ -26,6 +26,9 @@ from voltarium.models import (
     UpdateMigrationRequest,
 )
 
+PRODUCTION_BASE_URL = "https://api.ccee.org.br"
+SANDBOX_BASE_URL = "https://staging.ccee.org.br"
+
 
 class VoltariumClient:
     """Asynchronous client for CCEE API."""
@@ -33,9 +36,9 @@ class VoltariumClient:
     def __init__(
         self,
         *,
-        base_url: str,
         client_id: str,
         client_secret: str,
+        base_url: str = PRODUCTION_BASE_URL,
         timeout: float = 30.0,
         max_retries: int = 3,
     ) -> None:
