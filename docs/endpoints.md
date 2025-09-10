@@ -1,6 +1,6 @@
 # Supported Endpoints
 
-Voltarium currently supports the retailer migration endpoints of the CCEE API. These endpoints allow you to manage the complete lifecycle of energy retailer migrations in Brazil.
+Voltarium currently supports the retailer migration and contracts endpoints of the CCEE API. These endpoints allow you to manage the complete lifecycle of energy retailer migrations and contracts in Brazil.
 
 ## Client Setup
 
@@ -59,11 +59,14 @@ The migration endpoints provide full CRUD (Create, Read, Update, Delete) operati
 
 | Operation | Method | Endpoint | Description |
 |-----------|--------|----------|-------------|
-| [List Migrations](#list-migrations) | GET | `/varejistas/migracoes` | List migrations with filtering and pagination |
-| [Create Migration](#create-migration) | POST | `/varejistas/migracoes` | Create a new migration |
-| [Get Migration](#get-migration) | GET | `/varejistas/migracoes/{id}` | Get a specific migration by ID |
-| [Update Migration](#update-migration) | PUT | `/varejistas/migracoes/{id}` | Update an existing migration |
-| [Delete Migration](#delete-migration) | DELETE | `/varejistas/migracoes/{id}` | Delete a migration |
+| [List Migrations](#list-migrations) | GET | `/v1/varejista/migracoes` | List migrations with filtering and pagination |
+| [Create Migration](#create-migration) | POST | `/v1/varejista/migracoes` | Create a new migration |
+| [Get Migration](#get-migration) | GET | `/v1/varejista/migracoes/{id}` | Get a specific migration by ID |
+| [Update Migration](#update-migration) | PUT | `/v1/varejista/migracoes/{id}` | Update an existing migration |
+| [Delete Migration](#delete-migration) | DELETE | `/v1/varejista/migracoes/{id}` | Delete a migration |
+| [List Contracts](#list-contracts) | GET | `/v1/varejista/contratos` | List retailer contracts with filtering and pagination |
+| [Get Contract](#get-contract) | GET | `/v1/varejista/contratos/{id}` | Get a specific contract by ID |
+| [Create Contract](#create-contract) | POST | `/v1/varejista/contratos` | Create a retailer contract |
 
 ## List Migrations
 
@@ -125,6 +128,88 @@ class MigrationListItem:
     reference_month: datetime
     denunciation_date: datetime
     cer_celebration_id: str | None
+```
+
+## Contracts Endpoints (🇧🇷 Contratos)
+
+### List Contracts
+
+Retrieve a paginated list of retailer contracts with optional filtering.
+
+```python
+async with VoltariumClient(...) as client:
+    # Filtering by utility is required in sandbox and often in production
+    contracts = client.list_contracts(
+        initial_reference_month="2024-01",
+        final_reference_month="2024-12",
+        agent_code="12345",
+        profile_code="67890",
+        utility_agent_code="100004",  # codigoAgenteConcessionaria
+        consumer_unit_code=None,        # optional
+        contract_status=None            # optional
+    )
+
+    async for contract in contracts:
+        print(contract.contract_id)
+```
+
+Parameters mirror migration listing with `ListContractsParams`. Notable filters:
+
+- `utility_agent_code` (`codigoAgenteConcessionaria`): utility filter (recommended/required)
+- `consumer_unit_code` (`codigoUC`): optional
+- `contract_status` (`statusContrato`): optional
+
+### Get Contract
+
+Retrieve a specific contract by its ID.
+
+```python
+async with VoltariumClient(...) as client:
+    contract = await client.get_contract(
+        contract_id="CONTRACT_ID_123",
+        agent_code="12345",
+        profile_code="67890",
+    )
+
+    print(contract.contract_id, contract.contract_status)
+```
+
+### Create Contract
+
+Create a retailer contract.
+
+```python
+from voltarium.models import CreateContractRequest
+
+async with VoltariumClient(...) as client:
+    request = CreateContractRequest(
+        codigoAgenteConcessionaria=100004,         # utility_agent_code
+        codigoUnidadeConsumidora="UC123456",      # consumer_unit_code
+        enderecoUnidadeConsumidora="Rua Exemplo, 123, Bairro Exemplo",  # consumer_unit_address
+        nomeUnidadeConsumidora="Empresa XYZ",     # consumer_unit_name
+        numeroDocumento="12345678901",            # document_number (CPF or CNPJ numeric)
+        representantesLegais=[
+            {
+                "nomeContato": "Joao Silva",
+                "nomeEmail": "email@exemplo.com",
+                "numeroDocumento": "12345678901",
+                "tipoContato": "UNIDADE_CONSUMIDORA",
+                "tipoDocumento": "CPF",
+            }
+        ],
+        tipoDocumento="CPF",                       # document_type
+        telefoneUnidadeConsumidora="(11) 98765-4321",  # consumer_unit_phone
+        cnpjFilialUnidadeConsumidora=None,               # branch CNPJ (omit for CPF)
+        enderecoFilialUnidadeConsumidora=None,           # branch address (omit for CPF)
+    )
+
+    contract = await client.create_contract(
+        contract_data=request,
+        agent_code="12345",
+        profile_code="67890",
+    )
+
+    print(contract.contract_id)
 ```
 
 ### Example
