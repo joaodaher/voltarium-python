@@ -1,6 +1,6 @@
 """Model exports for the Voltarium package."""
 
-from .constants import Submarket
+from .constants import MigrationStatus, Submarket
 from .contracts import Contract, CreateContractRequest
 from .migration import (
     BaseMigration,
@@ -26,6 +26,7 @@ __all__ = [
     "ListMigrationsParams",
     "MigrationItem",
     "MigrationListItem",
+    "MigrationStatus",
     "Submarket",
     "Token",
     "UpdateMigrationRequest",
