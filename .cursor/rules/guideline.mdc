@@ -1,0 +1,48 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Cursor Rule: Adding Support for New CCEE Endpoints
+
+This project uses Voltarium's coding standards when integrating new API endpoints. Follow these steps exactly:
+
+1. **Confirm the Source Documentation**  
+   - Use the official Postman collection reference: `https://documenter.getpostman.com/view/30322966/2sAXqqchhJ`.  
+   - Identify the endpoint path, required headers, and payload contracts.
+
+2. **Inspect Real Payloads**  
+   - Use the sandbox environment for real request/response samples:  
+     - Base URL: `API_BASE_URL_STAGING` from `voltarium.models.constants`.  
+     - Authenticate with sandbox credentials from `voltarium.sandbox.RETAILERS` / `UTILITIES`.  
+   - Make raw calls (e.g., `uv run python - <<'PY' ... PY`) to capture the exact payload.
+   - This is important because we want to ensure that the payload is exactly as the API expects it.
+
+3. **Model Creation (Pydantic)**  
+   - Build new Pydantic models under `voltarium/models/` with English attribute names.  
+   - Use `Field(..., alias="<portugueseName>")` or `serialization_alias` for outgoing payloads.  
+   - Models must be strict to the contract: only include fields present in the API response/request.  
+   - Separate "read" models and "write" models when payloads differ.
+   - Don't add fields that are not present in the API response/request.
+
+4. **Factories**  
+   - Add realistic factories under `voltarium/factories/`, using `Faker("pt_BR")` when generating Brazilian data.  
+   - Ensure field values respect the API format (CPF/CNPJ, telephone, addresses, etc.).
+
+5. **Tests**  
+   - Write integration tests in `tests/test_client/` covering the lifecycle:  
+     - Authenticate, create, list, fetch by ID, update, filter, etc., mirroring real usage.  
+   - Use sandbox credentials from fixtures or factories; reuse `utility_agent_code`, `retailer_agent_code`, etc.  
+   - Consider that eventually we might get MORE data than expected, because it's a shared sandbox environment.
+
+6. **Documentation**  
+   - Update `docs/endpoints.md` with new sections/examples.  
+   - Show sample payloads, Python snippets, and highlight required filters like `codigoAgenteConcessionaria`.
+
+7. **Cursor AI Tips**  
+   - Run `task test` after changes; ensure >1 pass through `pytest` (rerun on failure).  
+   - Keep responses concise; reference file paths instead of pasting large outputs.
+   - Do not cheat tests by adding "if" or "try-catch" blocks to the tests, they must be deterministic.
+
+Following this rule keeps the Python client consistent with the CCEE API and ensures our tests reflect real payloads.
+
