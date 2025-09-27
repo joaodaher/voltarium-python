@@ -1,14 +1,13 @@
 """Factories for contract-related models."""
 
 import random
-from datetime import datetime, timedelta
 from typing import Any
 
 import factory
 from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
-from voltarium.models import CreateContractRequest
+from voltarium.models import CreateContractRequest, LegalRepresentativeWrite
 from voltarium.sandbox import RETAILERS, UTILITIES
 
 
@@ -22,69 +21,37 @@ class CreateContractRequestFactory(factory.Factory):  # type: ignore
         sandbox_retailer = FuzzyChoice(RETAILERS)  # type: ignore
         sandbox_utility = FuzzyChoice(UTILITIES)  # type: ignore
 
-    @factory.lazy_attribute  # type: ignore
-    def retailer_agent_code(obj: Any) -> int:
-        return obj.sandbox_retailer.agent_code
-
-    @factory.lazy_attribute  # type: ignore
-    def retailer_profile_code(obj: Any) -> int:
-        return random.choice(obj.sandbox_retailer.profiles)
-
-    @factory.lazy_attribute  # type: ignore
-    def utility_agent_code(obj: Any) -> int:
-        return obj.sandbox_utility.agent_code
-
+    utility_agent_code = factory.LazyAttribute(lambda obj: obj.sandbox_utility.agent_code)
     consumer_unit_code = factory.Faker("numerify", text="########")
-    document_type = FuzzyChoice(["CPF"])  # type: ignore
-
-    @factory.lazy_attribute  # type: ignore
-    def document_number(obj: Any) -> str:
-        f = Faker("pt_BR")
-        return "".join(filter(str.isdigit, f.cpf()))
-
-    @factory.lazy_attribute  # type: ignore
-    def reference_month(obj: Any) -> str:
-        future_date = datetime.now() + timedelta(days=random.randint(30, 90))
-        return future_date.strftime("%Y-%m")
-
-    @factory.lazy_attribute  # type: ignore
-    def start_date(obj: Any) -> str:
-        future_date = datetime.now() + timedelta(days=random.randint(1, 30))
-        return future_date.strftime("%Y-%m-%d")
-
-    end_date = None
-    comment = factory.Faker("text", max_nb_chars=120)
-
-    # Required business fields (minimal stub content for sandbox acceptance)
-    corporate_name = factory.Faker("company")
+    consumer_unit_address = factory.Faker("address")
     consumer_unit_name = factory.Faker("company")
+    document_type = factory.Faker("random_element", elements=["CPF", "CNPJ"])
+    document_number = factory.LazyAttribute(
+        lambda obj: "".join(
+            filter(str.isdigit, (Faker("pt_BR").cpf() if obj.document_type == "CPF" else Faker("pt_BR").cnpj()))
+        )
+    )
 
     @factory.lazy_attribute
-    def representantes_legais(obj: Any) -> list[dict]:
-        f = Faker("pt_BR")
-        f_en = Faker("en_US")
-        # Generate ASCII-only contact name without special chars per API rule
-        raw_name = f_en.name()
-        cleaned_name = "".join(ch for ch in raw_name if ("A" <= ch <= "Z") or ("a" <= ch <= "z") or ch == " ")
-        cleaned_name = " ".join(cleaned_name.split())  # collapse multiple spaces
+    def legal_representatives(obj: Any) -> list[LegalRepresentativeWrite]:
+        faker = Faker("pt_BR")
+        doc = "".join(filter(str.isdigit, faker.cpf()))
         return [
-            {
-                "nomeContato": cleaned_name,
-                "nomeEmail": f.email(),
-                "numeroDocumento": "".join(filter(str.isdigit, f.cpf())),
-                "tipoContato": "UNIDADE_CONSUMIDORA",
-                "tipoDocumento": "CPF",
-            }
+            LegalRepresentativeWrite(
+                contact_name=faker.first_name() + " " + faker.last_name(),
+                contact_email=faker.email(),
+                document_number=doc,
+                contact_type="UNIDADE_CONSUMIDORA",
+                document_type="CPF",
+            )
         ]
 
-    consumer_unit_address = factory.Faker("address")
-
-    @factory.lazy_attribute
-    def consumer_unit_phone(obj: Any) -> str:
-        ddd = random.randint(11, 99)
-        numero = random.randint(100000000, 999999999)  # 9 digits
-        return f"({ddd:02d}) {numero // 10000:05d}-{numero % 10000:04d}"
-
-    # For CPF requests, branch fields must not be provided
-    branch_consumer_unit_cnpj = None
-    branch_consumer_unit_address = None
+    consumer_unit_phone = factory.LazyAttribute(
+        lambda obj: f"({random.randint(11, 99):02d}) {random.randint(10000, 99999)}-{random.randint(0, 9999):04d}"
+    )
+    branch_consumer_unit_cnpj = factory.LazyAttribute(
+        lambda obj: ("".join(filter(str.isdigit, Faker("pt_BR").cnpj())) if obj.document_type == "CNPJ" else None)
+    )
+    branch_consumer_unit_address = factory.LazyAttribute(
+        lambda obj: (Faker("pt_BR").address() if obj.document_type == "CNPJ" else None)
+    )

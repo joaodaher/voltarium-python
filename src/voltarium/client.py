@@ -19,6 +19,7 @@ from voltarium.exceptions import (
 from voltarium.models import (
     ApiHeaders,
     Contract,
+    ContractFile,
     CreateContractRequest,
     CreateMigrationRequest,
     ListContractsParams,
@@ -500,6 +501,42 @@ class VoltariumClient:
         if isinstance(body, list) and body:
             return Contract.model_validate(body[0])
         return Contract.model_validate(body)
+
+    async def download_contract_file(
+        self,
+        contract_id: str,
+        agent_code: str | int,
+        profile_code: str | int,
+    ) -> ContractFile:
+        """Download the binary file for a concluded contract.
+
+        Returns metadata and base64-encoded payload compatible with tests and
+        callers that need to persist the document locally.
+        """
+
+        headers_model = ApiHeaders(
+            agent_code=str(agent_code),
+            profile_code=str(profile_code),
+        )
+
+        response = await self._request(
+            method="GET",
+            path=f"/v1/varejista/contratos/{contract_id}/arquivo",
+            headers=headers_model.model_dump(by_alias=True),
+        )
+
+        content_disposition = response.headers.get("content-disposition", "")
+        filename = contract_id
+        if "filename=" in content_disposition:
+            filename = content_disposition.split("filename=")[-1].strip('"')
+
+        return ContractFile(
+            contract_id=contract_id,
+            filename=filename,
+            content_type=response.headers.get("content-type", "application/octet-stream"),
+            content=response.content,
+            content_length=int(response.headers.get("content-length", len(response.content))),
+        )
 
     async def __aenter__(self) -> Self:
         """Async context manager entry."""

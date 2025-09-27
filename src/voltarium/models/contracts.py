@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class Contract(BaseModel):
@@ -20,18 +20,94 @@ class Contract(BaseModel):
     consumer_unit_code: str | None = Field(
         default=None, alias="codigoUnidadeConsumidora", description="Consumer unit code"
     )
-    retailer_agent_code: int | None = Field(
-        default=None, alias="codigoAgenteVarejista", description="Retailer agent code"
+    consumer_unit_name: str | None = Field(
+        default=None, alias="nomeUnidadeConsumidora", description="Consumer unit name"
     )
-    utility_agent_code: int | None = Field(
-        default=None, alias="codigoAgenteConcessionaria", description="Utility agent code"
+    consumer_unit_address: str | None = Field(
+        default=None, alias="enderecoUnidadeConsumidora", description="Consumer unit address"
+    )
+    consumer_unit_phone: str | None = Field(
+        default=None, alias="telefoneUnidadeConsumidora", description="Consumer unit phone"
     )
     document_type: str | None = Field(default=None, alias="tipoDocumento", description="Document type")
     document_number: str | None = Field(default=None, alias="numeroDocumento", description="Document number")
-    start_date: datetime | None = Field(default=None, alias="dataInicio", description="Start date")
-    end_date: datetime | None = Field(default=None, alias="dataFim", description="End date")
-    reference_month: datetime | None = Field(default=None, alias="mesReferencia", description="Reference month")
-    contract_status: str | None = Field(default=None, alias="statusContrato", description="Contract status")
+    authenticity_code: str | None = Field(
+        default=None, alias="codigoAutenticidade", description="Authenticity code for signed contract"
+    )
+    representatives: list["LegalRepresentative"] | None = Field(
+        default=None, alias="representantesLegais", description="Legal representatives"
+    )
+    branch_consumer_unit_cnpj: str | None = Field(
+        default=None,
+        alias="cnpjFilialUnidadeConsumidora",
+        description="Branch CNPJ for the consumer unit",
+    )
+    branch_consumer_unit_address: str | None = Field(
+        default=None,
+        alias="enderecoFilialUnidadeConsumidora",
+        description="Branch address for the consumer unit",
+    )
+    contract_status: str | None = Field(default=None, alias="situacaoCcv", description="Contract status")
+
+
+class LegalRepresentative(BaseModel):
+    """Legal representative information returned by the contracts API."""
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    contact_name: str | None = Field(default=None, alias="nomeContato", description="Contact name")
+    contact_email: str | None = Field(default=None, alias="emailContato", description="Contact email")
+    document_number: str | None = Field(default=None, alias="numeroDocumento", description="Document number")
+    contact_type: Literal["UNIDADE_CONSUMIDORA", "VAREJISTA"] | None = Field(
+        default=None, alias="tipoContato", description="Contact type"
+    )
+    document_type: Literal["CPF", "CNPJ"] | None = Field(
+        default=None, alias="tipoDocumento", description="Document type"
+    )
+    retailer_contact_code: int | None = Field(
+        default=None, alias="codigoContatoVarejista", description="Retailer contact code"
+    )
+    signature_status: str | None = Field(default=None, alias="situacaoAssinatura", description="Signature status")
+    updated_at: datetime | None = Field(default=None, alias="dataAtualizacao", description="Last update timestamp")
+    contract_code: str | None = Field(default=None, alias="codigoContrato", description="Contract code reference")
+
+
+class LegalRepresentativeWrite(BaseModel):
+    """Legal representative payload for contract creation (write model)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    contact_name: str = Field(serialization_alias="nomeContato", description="Contact name")
+    contact_email: str = Field(serialization_alias="nomeEmail", description="Contact email")
+    document_number: str = Field(serialization_alias="numeroDocumento", description="Document number")
+    contact_type: Literal["UNIDADE_CONSUMIDORA", "VAREJISTA"] = Field(
+        serialization_alias="tipoContato", description="Contact type"
+    )
+    document_type: Literal["CPF", "CNPJ"] = Field(serialization_alias="tipoDocumento", description="Document type")
+
+    @field_validator("document_number")
+    def validate_document_number(cls, v: str) -> str:
+        v = "".join(filter(str.isdigit, v))
+        if not v.isdigit():
+            raise ValueError("document_number must be a number")
+        return v
+
+
+class ContractFile(BaseModel):
+    """Binary payload returned when downloading a contract file."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    contract_id: str = Field(description="Contract identifier")
+    filename: str = Field(description="Suggested filename for the document")
+    content_type: str = Field(description="MIME type declared by the API")
+    content: bytes = Field(description="Binary content of the contract", repr=False)
+    content_length: int = Field(description="Size of the binary payload in bytes")
+
+    @model_validator(mode="after")
+    def sync_length(cls, values: "ContractFile") -> "ContractFile":  # type: ignore[override]
+        values.content_length = len(values.content)
+        return values
 
 
 class CreateContractRequest(BaseModel):
@@ -55,9 +131,8 @@ class CreateContractRequest(BaseModel):
     consumer_unit_name: str | None = Field(
         default=None, serialization_alias="nomeUnidadeConsumidora", description="Consumer unit name"
     )
-
-    # Legal representatives (minimal schema, extra allowed)
-    representantes_legais: list[dict] | None = Field(
+    # Legal representatives (english attribute name; serialized to representantesLegais)
+    legal_representatives: list[LegalRepresentativeWrite] | None = Field(
         default=None,
         serialization_alias="representantesLegais",
         description="List of legal representatives",

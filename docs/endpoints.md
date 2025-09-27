@@ -67,6 +67,7 @@ The migration endpoints provide full CRUD (Create, Read, Update, Delete) operati
 | [List Contracts](#list-contracts) | GET | `/v1/varejista/contratos` | List retailer contracts with filtering and pagination |
 | [Get Contract](#get-contract) | GET | `/v1/varejista/contratos/{id}` | Get a specific contract by ID |
 | [Create Contract](#create-contract) | POST | `/v1/varejista/contratos` | Create a retailer contract |
+| [Download Contract File](#download-contract-file) | GET | `/v1/varejista/contratos/{id}/arquivo` | Retrieve the signed contract document |
 
 ## List Migrations
 
@@ -210,6 +211,32 @@ async with VoltariumClient(...) as client:
     )
 
     print(contract.contract_id)
+```
+
+### Download Contract File
+
+Download the generated PDF for a concluded contract. Contracts in status `CONCLUIDO` return a binary payload with headers indicating `content-type: application/pdf` and `content-disposition` containing the suggested filename.
+
+```python
+contract_file = await client.download_contract_file(
+    contract_id="1cdf0c2f-332a-4d50-9939-7db74be62924",
+    agent_code="12345",
+    profile_code="67890",
+)
+
+with open(contract_file.filename, "wb") as fp:
+    fp.write(contract_file.content)
+```
+
+**Response shape**
+
+```python
+ContractFile(
+    contract_id="1cdf0c2f-332a-4d50-9939-7db74be62924",
+    filename="1cdf0c2f-332a-4d50-9939-7db74be62924.pdf",
+    content_type="application/pdf",
+    content_length=78448,
+)
 ```
 
 ### Example
@@ -443,8 +470,8 @@ async with VoltariumClient(...) as client:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `reference_month` | `str` | Yes | Reference month (YYYY-MM format) |
-| `retailer_profile_code` | `int` | Yes | Retailer profile code |
-| `document_type` | `Literal["CNPJ"]` | Yes | Document type (only CNPJ supported) |
+| `retailer_profile_code` | `int \| str` | Yes | Retailer profile code |
+| `document_type` | `Literal["CPF", "CNPJ"]` | Yes | Document type |
 | `document_number` | `str` | Yes | Document number (will be validated) |
 | `consumer_unit_email` | `str` | Yes | Consumer unit email |
 
