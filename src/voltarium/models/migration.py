@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from voltarium.models.constants import MigrationStatus
 
@@ -19,7 +19,9 @@ class BaseMigration(BaseModel):
         alias="codigoAgenteConcessionariaUnidadeConsumidora", description="Utility agent consumer unit code"
     )
     utility_agent_code: int = Field(alias="codigoAgenteConcessionaria", description="Utility agent code")
-    document_type: str | None = Field(default=None, alias="tipoDocumento", description="Document type")
+    document_type: Literal["CPF", "CNPJ"] | None = Field(
+        default=None, alias="tipoDocumento", description="Document type"
+    )
     document_number: str | None = Field(default=None, alias="numeroDocumento", description="Document number")
     retailer_agent_code: int = Field(alias="codigoAgenteVarejista", description="Retailer agent code")
     request_date: datetime = Field(alias="dataSolicitacao", description="Request date")
@@ -28,7 +30,9 @@ class BaseMigration(BaseModel):
     submarket: str | None = Field(default=None, alias="submercado", description="Submarket")
     dhc_value: float | None = Field(default=None, alias="valorDHC", description="DHC value")
     musd_value: float | None = Field(default=None, alias="valorMusd", description="MUSD value")
-    penalty_payment: str | None = Field(default=None, alias="pagamentoMulta", description="Penalty payment")
+    penalty_payment: Literal["SIM", "NAO"] | None = Field(
+        default=None, alias="pagamentoMulta", description="Penalty payment"
+    )
     justification: str | None = Field(default=None, alias="justificativa", description="Justification")
     validation_date: datetime | None = Field(default=None, alias="dataValidacao", description="Validation date")
     consumer_unit_email: str = Field(alias="emailUnidadeConsumidora", description="Consumer unit email")
@@ -70,8 +74,12 @@ class CreateMigrationRequest(BaseModel):
     utility_agent_code: int | str = Field(
         serialization_alias="codigoAgenteConcessionaria", description="Utility agent code"
     )
-    document_type: Literal["CNPJ"] = Field(serialization_alias="tipoDocumento", description="Document type")
-    document_number: str = Field(serialization_alias="numeroDocumento", description="Document number")
+    document_type: Literal["CPF", "CNPJ"] = Field(serialization_alias="tipoDocumento", description="Document type")
+    document_number: str | None = Field(
+        default=None,
+        serialization_alias="numeroDocumento",
+        description="Document number (omit for CPF requests)",
+    )
     retailer_agent_code: int | str = Field(
         serialization_alias="codigoAgenteVarejista", description="Retailer agent code"
     )
@@ -83,15 +91,29 @@ class CreateMigrationRequest(BaseModel):
     consumer_unit_email: str = Field(serialization_alias="emailUnidadeConsumidora", description="Consumer unit email")
     comment: str | None = Field(default=None, serialization_alias="comentario", description="Comment")
 
-    @field_validator("document_number")
-    def validate_document_number(cls, v: str) -> str:
-        """Validate document number format."""
-        # Remove all non-numeric characters
-        v = "".join(filter(str.isdigit, v))
-        # Check if the number is valid
-        if not v.isdigit():
+    @field_validator("document_number", mode="before")
+    def normalize_document_number(cls, v: str | None) -> str | None:
+        """Normalize document number format."""
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+
+        digits = "".join(filter(str.isdigit, str(v)))
+        if not digits:
             raise ValueError("document_number must be a number")
-        return v
+        return digits
+
+    @model_validator(mode="after")
+    def validate_document_length(cls, values: "CreateMigrationRequest") -> "CreateMigrationRequest":  # type: ignore[override]
+        document_type = values.document_type
+        document_number = values.document_number
+        if document_type == "CPF":
+            if document_number is not None:
+                raise ValueError("document_number must be omitted when document_type is CPF")
+            return values
+        if document_type == "CNPJ" and (document_number is None or len(document_number) != 14):
+            msg = "CNPJ numbers must contain exactly 14 digits"
+            raise ValueError(msg)
+        return values
 
     @field_validator("reference_month")
     def validate_reference_month(cls, v: str) -> str:
@@ -120,8 +142,10 @@ class UpdateMigrationRequest(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     reference_month: str = Field(serialization_alias="mesReferencia", description="Reference month")
-    retailer_profile_code: int = Field(serialization_alias="codigoPerfilVarejista", description="Retailer profile code")
-    document_type: Literal["CNPJ"] = Field(serialization_alias="tipoDocumento", description="Document type")
+    retailer_profile_code: int | str = Field(
+        serialization_alias="codigoPerfilVarejista", description="Retailer profile code"
+    )
+    document_type: Literal["CPF", "CNPJ"] = Field(serialization_alias="tipoDocumento", description="Document type")
     document_number: str = Field(serialization_alias="numeroDocumento", description="Document number")
     consumer_unit_email: str = Field(serialization_alias="emailUnidadeConsumidora", description="Consumer unit email")
 
@@ -134,6 +158,18 @@ class UpdateMigrationRequest(BaseModel):
         if not v.isdigit():
             raise ValueError("document_number must be a number")
         return v
+
+    @model_validator(mode="after")
+    def validate_document_length(cls, values: "UpdateMigrationRequest") -> "UpdateMigrationRequest":  # type: ignore[override]
+        document_type = values.document_type
+        document_number = values.document_number
+        if document_type == "CPF" and len(document_number) != 11:
+            msg = "CPF numbers must contain exactly 11 digits"
+            raise ValueError(msg)
+        if document_type == "CNPJ" and len(document_number) != 14:
+            msg = "CNPJ numbers must contain exactly 14 digits"
+            raise ValueError(msg)
+        return values
 
     @field_validator("reference_month")
     def validate_reference_month(cls, v: str) -> str:

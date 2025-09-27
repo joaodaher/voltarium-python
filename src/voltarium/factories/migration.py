@@ -6,6 +6,7 @@ from typing import Any
 
 import factory
 from factory.fuzzy import FuzzyChoice
+from faker import Faker
 
 from voltarium.models.constants import Submarket
 from voltarium.models.migration import (
@@ -16,6 +17,8 @@ from voltarium.models.migration import (
     UpdateMigrationRequest,
 )
 from voltarium.sandbox import RETAILERS, UTILITIES
+
+fake_br = Faker("pt_BR")
 
 
 class BaseMigrationFactory(factory.Factory):
@@ -46,7 +49,16 @@ class BaseMigrationFactory(factory.Factory):
     consumer_unit_code = factory.Faker("numerify", text="########")
     utility_agent_consumer_unit_code = factory.Faker("numerify", text="###")
     document_type = factory.Faker("random_element", elements=("CPF", "CNPJ"))
-    document_number = factory.Faker("numerify", text="###########")
+
+    @factory.lazy_attribute
+    def document_number(obj: Any) -> str | None:
+        doc_type = getattr(obj, "document_type", None)
+        if doc_type == "CPF":  # type: ignore[attr-defined]
+            return fake_br.cpf().replace(".", "").replace("-", "")
+        if doc_type == "CNPJ":  # type: ignore[attr-defined]
+            return fake_br.cnpj().replace(".", "").replace("/", "").replace("-", "")
+        return None
+
     request_date = factory.Faker("date_time_this_year")
     migration_status = factory.Faker("random_element", elements=("PENDENTE", "APROVADA", "REJEITADA"))
     consumer_unit_email = factory.Faker("email")
@@ -55,7 +67,7 @@ class BaseMigrationFactory(factory.Factory):
     # Optional fields
     dhc_value = factory.Faker("pyfloat", positive=True, max_value=10000)
     musd_value = factory.Faker("pyfloat", positive=True, max_value=1000)
-    penalty_payment = factory.Faker("random_element", elements=("S", "N"))
+    penalty_payment = factory.Faker("random_element", elements=("SIM", "NAO"))
     justification = factory.Faker("text", max_nb_chars=200)
     validation_date = factory.Faker("date_time_this_year")
     comment = factory.Faker("text", max_nb_chars=500)
@@ -130,8 +142,13 @@ class CreateMigrationRequestFactory(factory.Factory):  # type: ignore
         return utility.agent_code
 
     consumer_unit_code = factory.Faker("numerify", text="########")
-    document_type = FuzzyChoice(["CNPJ"])  # type: ignore
-    document_number = factory.Faker("cnpj", locale="pt_BR")
+    document_type = FuzzyChoice(["CNPJ", "CPF"])  # type: ignore
+
+    @factory.lazy_attribute  # type: ignore
+    def document_number(obj: Any) -> str | None:
+        if obj.document_type == "CPF":
+            return None
+        return fake_br.cnpj().replace(".", "").replace("/", "").replace("-", "")
 
     @factory.lazy_attribute  # type: ignore
     def reference_month(obj: Any) -> str:
@@ -169,6 +186,12 @@ class UpdateMigrationRequestFactory(factory.Factory):  # type: ignore
         future_date = datetime.now() + timedelta(days=random.randint(30, 90))
         return future_date.strftime("%Y-%m")
 
-    document_type = FuzzyChoice(["CNPJ"])  # type: ignore
-    document_number = factory.Faker("cnpj", locale="pt_BR")
+    document_type = FuzzyChoice(["CNPJ", "CPF"])  # type: ignore
+
+    @factory.lazy_attribute  # type: ignore
+    def document_number(obj: Any) -> str:
+        if obj.document_type == "CPF":
+            return fake_br.cpf().replace(".", "").replace("-", "")
+        return fake_br.cnpj().replace(".", "").replace("/", "").replace("-", "")
+
     consumer_unit_email = factory.Faker("email")

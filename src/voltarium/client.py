@@ -176,7 +176,15 @@ class VoltariumClient:
 
     def _raise_for_status(self, response: Response) -> None:
         """Handle API response and raise appropriate exceptions."""
-        content = response.json()
+
+        if response.status_code < 400:
+            response.raise_for_status()
+            return
+
+        try:
+            content = response.json()
+        except ValueError:
+            content = {}
 
         if response.status_code == 401:
             raise AuthenticationError("???")
@@ -321,7 +329,10 @@ class VoltariumClient:
             headers=headers_model.model_dump(by_alias=True),
         )
 
-        return MigrationItem.model_validate(response.json()[0])
+        data = response.json()
+        if isinstance(data, list) and data:
+            return MigrationItem.model_validate(data[0])
+        return MigrationItem.model_validate(data)
 
     async def update_migration(
         self,
