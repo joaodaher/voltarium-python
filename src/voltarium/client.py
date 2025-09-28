@@ -30,8 +30,8 @@ from voltarium.models import (
     UpdateMigrationRequest,
 )
 
-PRODUCTION_BASE_URL = "https://api.ccee.org.br"
-SANDBOX_BASE_URL = "https://staging.ccee.org.br"
+PRODUCTION_BASE_URL = "https://api-abm.ccee.org.br"
+SANDBOX_BASE_URL = "https://sandbox-api-abm.ccee.org.br"
 
 
 class VoltariumClient:

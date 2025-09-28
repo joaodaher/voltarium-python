@@ -2,8 +2,7 @@ from collections.abc import AsyncGenerator
 
 import pytest
 
-from voltarium.client import VoltariumClient
-from voltarium.models.constants import API_BASE_URL_STAGING
+from voltarium.client import SANDBOX_BASE_URL, VoltariumClient
 from voltarium.sandbox import RETAILERS, UTILITIES, SandboxAgentCredentials
 
 
@@ -20,7 +19,7 @@ def utility() -> SandboxAgentCredentials:
 @pytest.fixture()
 async def client(retailer: SandboxAgentCredentials) -> AsyncGenerator[VoltariumClient]:
     client = VoltariumClient(
-        base_url=API_BASE_URL_STAGING,
+        base_url=SANDBOX_BASE_URL,
         client_id=retailer.client_id,
         client_secret=retailer.client_secret,
     )

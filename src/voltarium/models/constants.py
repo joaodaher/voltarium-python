@@ -16,7 +16,3 @@ class MigrationStatus(StrEnum):
     CLOSED = "ENCERRADA"
     CANCELLED = "CANCELADA"
     EXPIRED = "EXPIRADA"
-
-
-API_BASE_URL = "https://api-abm.ccee.org.br"
-API_BASE_URL_STAGING = "https://sandbox-api-abm.ccee.org.br"

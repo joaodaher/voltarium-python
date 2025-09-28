@@ -13,7 +13,7 @@ This project uses Voltarium's coding standards when integrating new API endpoint
 
 2. **Inspect Real Payloads**  
    - Use the sandbox environment for real request/response samples:  
-     - Base URL: `API_BASE_URL_STAGING` from `voltarium.models.constants`.  
+     - Base URL: `SANDBOX_BASE_URL` from `voltarium.client`.  
      - Authenticate with sandbox credentials from `voltarium.sandbox.RETAILERS` / `UTILITIES`.  
    - Make raw calls (e.g., `uv run python - <<'PY' ... PY`) to capture the exact payload.
    - This is important because we want to ensure that the payload is exactly as the API expects it.
