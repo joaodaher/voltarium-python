@@ -56,13 +56,8 @@ class LegalRepresentative(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     contact_name: str | None = Field(default=None, alias="nomeContato", description="Contact name")
-    contact_email: str | None = Field(default=None, alias="emailContato", description="Contact email")
-    document_number: str | None = Field(default=None, alias="numeroDocumento", description="Document number")
     contact_type: Literal["UNIDADE_CONSUMIDORA", "VAREJISTA"] | None = Field(
         default=None, alias="tipoContato", description="Contact type"
-    )
-    document_type: Literal["CPF", "CNPJ"] | None = Field(
-        default=None, alias="tipoDocumento", description="Document type"
     )
     retailer_contact_code: int | None = Field(
         default=None, alias="codigoContatoVarejista", description="Retailer contact code"
