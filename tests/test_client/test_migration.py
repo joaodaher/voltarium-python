@@ -42,7 +42,7 @@ async def test_migration_full_lifecycle_integration(
 
     # 2. Update Migration Test
     migration_id = migrations[0].migration_id
-    future_date = migrations[0].reference_date + timedelta(days=60)
+    future_date = migrations[0].reference_month + timedelta(days=60)
     update_request = UpdateMigrationRequestFactory.build(
         retailer_profile_code=profile_id,
         reference_month=future_date.strftime("%Y-%m"),
@@ -92,8 +92,8 @@ async def test_migration_full_lifecycle_integration(
         migrations.append(result)
 
     # 5. List Migrations Test
-    earliest_month = min([m.reference_date for m in migrations])
-    latest_month = max([m.reference_date for m in migrations])
+    earliest_month = min([m.reference_month for m in migrations])
+    latest_month = max([m.reference_month for m in migrations])
 
     result_iter = client.list_migrations(
         initial_reference_month=earliest_month.strftime("%Y-%m"),

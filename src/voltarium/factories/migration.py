@@ -189,9 +189,9 @@ class UpdateMigrationRequestFactory(factory.Factory):  # type: ignore
     document_type = FuzzyChoice(["CNPJ", "CPF"])  # type: ignore
 
     @factory.lazy_attribute  # type: ignore
-    def document_number(obj: Any) -> str:
+    def document_number(obj: Any) -> str | None:
         if obj.document_type == "CPF":
-            return fake_br.cpf().replace(".", "").replace("-", "")
+            return None
         return fake_br.cnpj().replace(".", "").replace("/", "").replace("-", "")
 
     consumer_unit_email = factory.Faker("email")
