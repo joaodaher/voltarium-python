@@ -534,7 +534,7 @@ class VoltariumClient:
             contract_id=contract_id,
             filename=filename,
             content_type=response.headers.get("content-type", "application/octet-stream"),
-            content=response.content,
+            content_base64=response.text,
             content_length=int(response.headers.get("content-length", len(response.content))),
         )
 

@@ -226,6 +226,7 @@ contract_file = await client.download_contract_file(
 
 with open(contract_file.filename, "wb") as fp:
     fp.write(contract_file.content)
+
 ```
 
 **Response shape**
@@ -235,6 +236,7 @@ ContractFile(
     contract_id="1cdf0c2f-332a-4d50-9939-7db74be62924",
     filename="1cdf0c2f-332a-4d50-9939-7db74be62924.pdf",
     content_type="application/pdf",
+    content_base64="JVBERi0xLjUNCi4uLg==",
     content_length=78448,
 )
 ```
