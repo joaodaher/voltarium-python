@@ -103,17 +103,17 @@ class CreateMigrationRequest(BaseModel):
         return digits
 
     @model_validator(mode="after")
-    def validate_document_length(cls, values: "CreateMigrationRequest") -> "CreateMigrationRequest":  # type: ignore[override]
-        document_type = values.document_type
-        document_number = values.document_number
+    def validate_document_length(self) -> "CreateMigrationRequest":  # type: ignore[override]
+        document_type = self.document_type
+        document_number = self.document_number
         if document_type == "CPF":
             if document_number is not None:
                 raise ValueError("document_number must be omitted when document_type is CPF")
-            return values
+            return self
         if document_type == "CNPJ" and (document_number is None or len(document_number) != 14):
             msg = "CNPJ numbers must contain exactly 14 digits"
             raise ValueError(msg)
-        return values
+        return self
 
     @field_validator("reference_month")
     def validate_reference_month(cls, v: str) -> str:
@@ -167,19 +167,19 @@ class UpdateMigrationRequest(BaseModel):
         return digits
 
     @model_validator(mode="after")
-    def validate_document_length(cls, values: "UpdateMigrationRequest") -> "UpdateMigrationRequest":  # type: ignore[override]
-        document_type = values.document_type
-        document_number = values.document_number
+    def validate_document_length(self) -> "UpdateMigrationRequest":  # type: ignore[override]
+        document_type = self.document_type
+        document_number = self.document_number
         if document_type == "CPF":
             if document_number is not None and len(document_number) != 11:
                 msg = "CPF numbers must contain exactly 11 digits"
                 raise ValueError(msg)
             # CPF updates must omit numeroDocumento entirely (API returns 400 otherwise)
-            return values
+            return self
         if document_type == "CNPJ" and (document_number is None or len(document_number) != 14):
             msg = "CNPJ numbers must contain exactly 14 digits"
             raise ValueError(msg)
-        return values
+        return self
 
     @field_validator("reference_month")
     def validate_reference_month(cls, v: str) -> str:
