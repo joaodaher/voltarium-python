@@ -66,4 +66,5 @@ async def test_contracts_full_lifecycle_integration(
     assert contract_file.contract_id == concluded_contract.contract_id
     assert contract_file.content_base64
     assert contract_file.content
+    assert contract_file.content_length
     assert contract_file.content_length == len(contract_file.content)

@@ -4,7 +4,7 @@ import base64
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
 
 
 class Contract(BaseModel):
@@ -98,17 +98,16 @@ class ContractFile(BaseModel):
     filename: str = Field(description="Suggested filename for the document")
     content_type: str = Field(description="MIME type declared by the API")
     content_base64: str = Field(description="Base64-encoded representation of the contract", repr=False)
-    content_length: int = Field(description="Size of the decoded payload in bytes")
-
-    @model_validator(mode="after")
-    def sync_length(cls, values: "ContractFile") -> "ContractFile":  # type: ignore[override]
-        values.content_length = len(values.content)
-        return values
 
     @computed_field(return_type=bytes, repr=False)
     def content(self) -> bytes:
         """Return the decoded contract contents as raw bytes."""
         return base64.b64decode(self.content_base64)
+
+    @computed_field(return_type=int)
+    def content_length(self) -> int:
+        """Return the size of the decoded payload in bytes."""
+        return len(self.content)
 
 
 class CreateContractRequest(BaseModel):
