@@ -197,7 +197,15 @@ class VoltariumClient:
         elif response.status_code == 429:
             raise RateLimitError("Rate limit exceeded")
         elif response.status_code == 400:
-            raise ValidationError(code=content.get("error"), message=content.get("message"))
+            raw_code = content.get("error")
+            error_code = raw_code if isinstance(raw_code, str) else str(raw_code or "unknown_error")
+
+            raw_message = content.get("message")
+            error_message = (
+                raw_message if isinstance(raw_message, str) else str(raw_message or "Unknown validation error")
+            )
+
+            raise ValidationError(code=error_code, message=error_message)
         response.raise_for_status()
 
     # Migration endpoints
@@ -535,7 +543,6 @@ class VoltariumClient:
             filename=filename,
             content_type=response.headers.get("content-type", "application/octet-stream"),
             content_base64=response.text,
-            content_length=int(response.headers.get("content-length", len(response.content))),
         )
 
     async def __aenter__(self) -> Self:

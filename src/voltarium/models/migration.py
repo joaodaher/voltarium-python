@@ -1,7 +1,7 @@
 """Migration models for CCEE API."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -103,7 +103,7 @@ class CreateMigrationRequest(BaseModel):
         return digits
 
     @model_validator(mode="after")
-    def validate_document_length(self) -> "CreateMigrationRequest":  # type: ignore[override]
+    def validate_document_length(self) -> Self:
         document_type = self.document_type
         document_number = self.document_number
         if document_type == "CPF":
@@ -167,7 +167,7 @@ class UpdateMigrationRequest(BaseModel):
         return digits
 
     @model_validator(mode="after")
-    def validate_document_length(self) -> "UpdateMigrationRequest":  # type: ignore[override]
+    def validate_document_length(self) -> Self:
         document_type = self.document_type
         document_number = self.document_number
         if document_type == "CPF":
