@@ -96,7 +96,7 @@ task install-dev
 task test
 
 # Quality checks
-task lint && task format && task mypy
+task lint && task format && task typecheck
 ```
 
 ## 🎯 Current Status
