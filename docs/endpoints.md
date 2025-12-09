@@ -241,6 +241,136 @@ ContractFile(
 )
 ```
 
+## Measurements Endpoints (🇧🇷 Medições)
+
+The measurements endpoints provide access to consumption measurements sent by utilities to retailers. These measurements represent energy consumption data for consumer units.
+
+### Overview
+
+| Operation | Method | Endpoint | Description |
+|-----------|--------|----------|-------------|
+| [List Measurements](#list-measurements) | GET | `/v1/varejista/consumo/medicoes` | List consumption measurements with filtering and pagination |
+
+### List Measurements
+
+Retrieve a paginated list of consumption measurements for a specific consumer unit.
+
+```python
+async with VoltariumClient(...) as client:
+    # List measurements for a consumer unit
+    measurements = client.list_measurements(
+        consumer_unit_code="UC123456",
+        utility_agent_code="100004",
+        start_datetime="2024-09-01T00:00:00-03:00",
+        end_datetime="2024-09-30T23:59:59-03:00",
+        agent_code="12345",
+        profile_code="67890"
+    )
+
+    async for measurement in measurements:
+        print(f"Measurement {measurement.measurement_consumption_id}: {measurement.consumption} kWh")
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `consumer_unit_code` | `str` | Yes | Consumer unit code |
+| `utility_agent_code` | `str \| int` | Yes | Utility agent code (concessionária) |
+| `start_datetime` | `str` | Yes | Start datetime (ISO 8601 with timezone) |
+| `end_datetime` | `str` | Yes | End datetime (ISO 8601 with timezone) |
+| `agent_code` | `str \| int` | Yes | Agent code for the request |
+| `profile_code` | `str \| int` | Yes | Profile code for the request |
+| `measurement_status` | `str` | No | Filter by measurement status (CONSISTIDA, REJEITADA) |
+
+### Important Constraints
+
+- **Same Month Requirement**: `start_datetime` and `end_datetime` must be within the same month/year
+- **Date Range**: Only dates from August 2024 onwards are supported
+- **Datetime Format**: Must be ISO 8601 with timezone (e.g., "2024-09-01T00:00:00-03:00")
+
+### Response
+
+Returns an async generator of `Measurement` objects with the following fields:
+
+```python
+class Measurement:
+    measurement_consumption_id: str  # Unique measurement identifier
+    consumer_unit_code: str          # Consumer unit code
+    utility_agent_code: int          # Utility agent code
+    reference_day: str               # Reference day (date)
+    consumption_reference_date: str  # Consumption reference datetime
+    consumption: float               # Consumption value in kWh
+    consumption_type: str            # Type (AJUSTADO, MEDIDO, ESTIMADO)
+    update_date: str                 # Last update datetime
+    measurement_status: str          # Status (CONSISTIDA, REJEITADA)
+```
+
+### Example with Status Filter
+
+```python
+async def list_validated_measurements():
+    async with VoltariumClient(...) as client:
+        # Get only validated measurements (CONSISTIDA)
+        measurements = client.list_measurements(
+            consumer_unit_code="UC123456",
+            utility_agent_code="100004",
+            start_datetime="2024-09-01T00:00:00-03:00",
+            end_datetime="2024-09-30T23:59:59-03:00",
+            agent_code="12345",
+            profile_code="67890",
+            measurement_status="CONSISTIDA"
+        )
+
+        total_consumption = 0.0
+        async for measurement in measurements:
+            total_consumption += measurement.consumption
+            print(f"Date: {measurement.reference_day}, "
+                  f"Consumption: {measurement.consumption} kWh, "
+                  f"Type: {measurement.consumption_type}")
+
+        print(f"Total consumption: {total_consumption} kWh")
+```
+
+### Error Handling
+
+The measurements endpoint includes specific error codes:
+
+- **`ERR_PERIODO_INVALIDO_MEDICOES`**: Dates are not within the same month/year
+- **`ERR_SISTEMA_MIGRACAO_IMPLATADO_MEDICOES`**: Dates are before system implementation (08/2024)
+- **`ERR_VALIDACAO_CAMPOS`**: Missing or invalid required fields
+
+```python
+from voltarium.exceptions import ValidationError
+
+async def safe_list_measurements():
+    async with VoltariumClient(...) as client:
+        try:
+            measurements = client.list_measurements(
+                consumer_unit_code="UC123456",
+                utility_agent_code="100004",
+                start_datetime="2024-09-01T00:00:00-03:00",
+                end_datetime="2024-09-30T23:59:59-03:00",
+                agent_code="12345",
+                profile_code="67890"
+            )
+
+            measurement_list = []
+            async for measurement in measurements:
+                measurement_list.append(measurement)
+
+            return measurement_list
+
+        except ValidationError as e:
+            if "ERR_PERIODO_INVALIDO_MEDICOES" in e.code:
+                print("Error: Start and end dates must be in the same month")
+            elif "ERR_SISTEMA_MIGRACAO_IMPLATADO_MEDICOES" in e.code:
+                print("Error: Dates must be from August 2024 onwards")
+            else:
+                print(f"Validation error: {e.message}")
+            raise
+```
+
 ### Example
 
 ```python
