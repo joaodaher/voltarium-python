@@ -16,6 +16,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
@@ -49,7 +50,7 @@ Documentation = "https://github.com/joaodaher/voltarium-python"
 "Bug Tracker" = "https://github.com/joaodaher/voltarium-python/issues"
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 line-length = 120
 exclude = [
     ".git",
