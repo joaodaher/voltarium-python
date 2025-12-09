@@ -35,7 +35,7 @@ class Contract(BaseModel):
     authenticity_code: str | None = Field(
         default=None, alias="codigoAutenticidade", description="Authenticity code for signed contract"
     )
-    representatives: list["LegalRepresentative"] | None = Field(
+    representatives: list[LegalRepresentative] | None = Field(
         default=None, alias="representantesLegais", description="Legal representatives"
     )
     branch_consumer_unit_cnpj: str | None = Field(
