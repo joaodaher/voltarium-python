@@ -23,7 +23,9 @@ from voltarium.models import (
     CreateContractRequest,
     CreateMigrationRequest,
     ListContractsParams,
+    ListMeasurementsParams,
     ListMigrationsParams,
+    Measurement,
     MigrationItem,
     MigrationListItem,
     Token,
@@ -544,6 +546,80 @@ class VoltariumClient:
             content_type=response.headers.get("content-type", "application/octet-stream"),
             content_base64=response.text,
         )
+
+    # Measurements endpoints
+
+    async def list_measurements(
+        self,
+        consumer_unit_code: str,
+        utility_agent_code: str | int,
+        start_datetime: str,
+        end_datetime: str,
+        agent_code: str | int,
+        profile_code: str | int,
+        measurement_status: str | None = None,
+    ) -> AsyncGenerator[Measurement]:
+        """List consumption measurements for a retailer.
+
+        Args:
+            consumer_unit_code: Consumer unit code
+            utility_agent_code: Utility agent code
+            start_datetime: Start datetime (ISO 8601 with timezone, e.g., 2024-09-01T00:00:00-03:00)
+            end_datetime: End datetime (ISO 8601 with timezone, e.g., 2024-09-30T23:59:59-03:00)
+            agent_code: Agent code
+            profile_code: Profile code
+            measurement_status: Optional measurement status filter (CONSISTIDA, REJEITADA)
+
+        Returns:
+            AsyncGenerator of measurements
+
+        Note:
+            start_datetime and end_datetime must be within the same month/year.
+            Only dates from 08/2024 onwards are supported.
+        """
+        # Create headers model
+        headers_model = ApiHeaders(
+            agent_code=str(agent_code),
+            profile_code=str(profile_code),
+        )
+
+        # Create parameters model
+        params_model = ListMeasurementsParams(
+            consumer_unit_code=consumer_unit_code,
+            utility_agent_code=str(utility_agent_code),
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            measurement_status=measurement_status,
+        )
+
+        async def _get_page(page_index: str | None = None) -> Response:
+            # Update the page index if provided
+            if page_index is not None:
+                params_model.next_page_index = page_index
+            else:
+                params_model.next_page_index = None
+
+            return await self._request(
+                method="GET",
+                path="/v1/varejista/consumo/medicoes",
+                headers=headers_model.model_dump(by_alias=True),
+                params=params_model.model_dump(by_alias=True, exclude_none=True),
+            )
+
+        # Handle pagination
+        page_index = None
+        while True:
+            response = await _get_page(page_index)
+            data = response.json()
+
+            # Yield measurements from current page
+            for measurement_data in data.get("medicoes", []):
+                yield Measurement.model_validate(measurement_data)
+
+            # Check if there are more pages
+            page_index = data.get("indexProximaPagina")
+            if page_index is None:
+                break
 
     async def __aenter__(self) -> Self:
         """Async context manager entry."""

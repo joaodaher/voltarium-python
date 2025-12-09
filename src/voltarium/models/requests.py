@@ -59,3 +59,28 @@ class ListContractsParams(BaseModel):
     next_page_index: str | None = Field(
         default=None, serialization_alias="indexProximaPagina", description="Next page index for pagination"
     )
+
+
+class ListMeasurementsParams(BaseModel):
+    """Query parameters for listing consumption measurements (medicoes)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    consumer_unit_code: str = Field(serialization_alias="codigoUnidadeConsumidora", description="Consumer unit code")
+    utility_agent_code: str = Field(serialization_alias="codigoAgenteConcessionaria", description="Utility agent code")
+    start_datetime: str = Field(
+        serialization_alias="dataInicio",
+        description="Start datetime (ISO 8601 with timezone, e.g., 2024-09-01T00:00:00-03:00)",
+    )
+    end_datetime: str = Field(
+        serialization_alias="dataFim",
+        description="End datetime (ISO 8601 with timezone, e.g., 2024-09-30T23:59:59-03:00)",
+    )
+    measurement_status: str | None = Field(
+        default=None,
+        serialization_alias="situacaoMedicao",
+        description="Measurement status filter (CONSISTIDA, REJEITADA)",
+    )
+    next_page_index: str | None = Field(
+        default=None, serialization_alias="indexProximaPagina", description="Next page index for pagination"
+    )
