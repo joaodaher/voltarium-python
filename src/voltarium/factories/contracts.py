@@ -50,8 +50,8 @@ class CreateContractRequestFactory(factory.Factory):  # type: ignore
         lambda obj: f"({random.randint(11, 99):02d}) {random.randint(10000, 99999)}-{random.randint(0, 9999):04d}"
     )
     branch_consumer_unit_cnpj = factory.LazyAttribute(
-        lambda obj: ("".join(filter(str.isdigit, Faker("pt_BR").cnpj())) if obj.document_type == "CNPJ" else None)
+        lambda obj: "".join(filter(str.isdigit, Faker("pt_BR").cnpj())) if obj.document_type == "CNPJ" else None
     )
     branch_consumer_unit_address = factory.LazyAttribute(
-        lambda obj: (Faker("pt_BR").address() if obj.document_type == "CNPJ" else None)
+        lambda obj: Faker("pt_BR").address() if obj.document_type == "CNPJ" else None
     )

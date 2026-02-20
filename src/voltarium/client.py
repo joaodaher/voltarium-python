@@ -2,6 +2,7 @@
 
 import time
 from collections.abc import AsyncGenerator
+from datetime import datetime, timedelta
 from types import TracebackType
 from typing import Any, Self
 
@@ -34,6 +35,36 @@ from voltarium.models import (
 
 PRODUCTION_BASE_URL = "https://api-abm.ccee.org.br"
 SANDBOX_BASE_URL = "https://sandbox-api-abm.ccee.org.br"
+
+
+def _split_datetime_range_by_month(start_str: str, end_str: str) -> list[tuple[str, str]]:
+    """Split a datetime range into same-month chunks (CCEE API requirement).
+
+    The measurements endpoint requires start and end datetimes to be within
+    the same month/year. This helper splits arbitrary ranges accordingly.
+    """
+    start = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+    end = datetime.fromisoformat(end_str.replace("Z", "+00:00"))
+    if start > end:
+        raise ValueError("start_datetime must be before or equal to end_datetime")
+
+    ranges: list[tuple[str, str]] = []
+    current_start = start
+    tz = start.tzinfo
+
+    while current_start <= end:
+        year, month = current_start.year, current_start.month
+        next_month = (
+            datetime(year + 1, 1, 1, tzinfo=tz)
+            if month == 12
+            else datetime(year, month + 1, 1, tzinfo=tz)
+        )
+        month_end = next_month - timedelta(seconds=1)
+        range_end = min(month_end, end)
+        ranges.append((current_start.isoformat(), range_end.isoformat()))
+        current_start = month_end + timedelta(seconds=1)
+
+    return ranges
 
 
 class VoltariumClient:
@@ -574,8 +605,8 @@ class VoltariumClient:
             AsyncGenerator of measurements
 
         Note:
-            start_datetime and end_datetime must be within the same month/year.
-            Only dates from 08/2024 onwards are supported.
+            Ranges spanning multiple months are automatically split into same-month chunks
+            (CCEE API requirement). Only dates from 08/2024 onwards are supported.
         """
         # Create headers model
         headers_model = ApiHeaders(
@@ -583,43 +614,44 @@ class VoltariumClient:
             profile_code=str(profile_code),
         )
 
-        # Create parameters model
-        params_model = ListMeasurementsParams(
-            consumer_unit_code=consumer_unit_code,
-            utility_agent_code=str(utility_agent_code),
-            start_datetime=start_datetime,
-            end_datetime=end_datetime,
-            measurement_status=measurement_status,
-        )
+        # Split range into same-month chunks (API requires start/end within same month)
+        ranges = _split_datetime_range_by_month(start_datetime, end_datetime)
 
-        async def _get_page(page_index: str | None = None) -> Response:
-            # Update the page index if provided
-            if page_index is not None:
-                params_model.next_page_index = page_index
-            else:
-                params_model.next_page_index = None
-
-            return await self._request(
-                method="GET",
-                path="/v1/varejista/consumo/medicoes",
-                headers=headers_model.model_dump(by_alias=True),
-                params=params_model.model_dump(by_alias=True, exclude_none=True),
+        for range_start, range_end in ranges:
+            params_model = ListMeasurementsParams(
+                consumer_unit_code=consumer_unit_code,
+                utility_agent_code=str(utility_agent_code),
+                start_datetime=range_start,
+                end_datetime=range_end,
+                measurement_status=measurement_status,
             )
 
-        # Handle pagination
-        page_index = None
-        while True:
-            response = await _get_page(page_index)
-            data = response.json()
+            async def _get_page(
+                params: ListMeasurementsParams,
+                page_index: str | None = None,
+            ) -> Response:
+                if page_index is not None:
+                    params.next_page_index = page_index
+                else:
+                    params.next_page_index = None
+                return await self._request(
+                    method="GET",
+                    path="/v1/varejista/consumo/medicoes",
+                    headers=headers_model.model_dump(by_alias=True),
+                    params=params.model_dump(by_alias=True, exclude_none=True),
+                )
 
-            # Yield measurements from current page
-            for measurement_data in data.get("medicoes", []):
-                yield Measurement.model_validate(measurement_data)
+            page_index = None
+            while True:
+                response = await _get_page(params_model, page_index)
+                data = response.json()
 
-            # Check if there are more pages
-            page_index = data.get("indexProximaPagina")
-            if page_index is None:
-                break
+                for measurement_data in data.get("medicoes", []):
+                    yield Measurement.model_validate(measurement_data)
+
+                page_index = data.get("indexProximaPagina")
+                if page_index is None:
+                    break
 
     async def __aenter__(self) -> Self:
         """Async context manager entry."""

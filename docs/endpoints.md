@@ -285,7 +285,7 @@ async with VoltariumClient(...) as client:
 
 ### Important Constraints
 
-- **Same Month Requirement**: `start_datetime` and `end_datetime` must be within the same month/year
+- **Multi-Month Ranges**: The client automatically splits date ranges spanning multiple months into same-month chunks (CCEE API requirement). You can pass any range (e.g., last 30 days) and it will be handled transparently.
 - **Date Range**: Only dates from August 2024 onwards are supported
 - **Datetime Format**: Must be ISO 8601 with timezone (e.g., "2024-09-01T00:00:00-03:00")
 
@@ -332,11 +332,25 @@ async def list_validated_measurements():
         print(f"Total consumption: {total_consumption} kWh")
 ```
 
+### Test Fixtures and Samples
+
+Real API response samples are stored in `tests/fixtures/measurements/`:
+
+- `raw_api_response.json` – Full response with multiple measurements (CONSISTIDA, REJEITADA)
+- `paginated_response_page1.json` – Paginated response with `indexProximaPagina`
+- `empty_response.json` – Empty medicoes array
+
+To capture real samples when fetching:
+
+```bash
+uv run python scripts/fetch_measurements_past_30_days.py UC-TESTE 100004 --dump
+```
+
 ### Error Handling
 
 The measurements endpoint includes specific error codes:
 
-- **`ERR_PERIODO_INVALIDO_MEDICOES`**: Dates are not within the same month/year
+- **`ERR_PERIODO_INVALIDO_MEDICOES`**: Dates are not within the same month/year (the client handles this automatically by splitting ranges)
 - **`ERR_SISTEMA_MIGRACAO_IMPLATADO_MEDICOES`**: Dates are before system implementation (08/2024)
 - **`ERR_VALIDACAO_CAMPOS`**: Missing or invalid required fields
 

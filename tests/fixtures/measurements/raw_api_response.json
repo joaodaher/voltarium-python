@@ -1,0 +1,38 @@
+{
+  "medicoes": [
+    {
+      "identificadorMedicaoConsumo": "UC-TESTE-202409-001",
+      "codigoUnidadeConsumidora": "UC-TESTE",
+      "codigoAgenteConcessionaria": 100004,
+      "diaReferencia": "2024-09-15",
+      "dataReferenciaConsumo": "2024-09-15T00:00:00-03:00",
+      "consumo": 15432.5,
+      "tipoConsumo": "AJUSTADO",
+      "dataAtualizacao": "2024-09-20T14:32:10-03:00",
+      "situacaoMedicao": "CONSISTIDA"
+    },
+    {
+      "identificadorMedicaoConsumo": "UC-TESTE-202409-002",
+      "codigoUnidadeConsumidora": "UC-TESTE",
+      "codigoAgenteConcessionaria": 100004,
+      "diaReferencia": "2024-09-16",
+      "dataReferenciaConsumo": "2024-09-16T00:00:00-03:00",
+      "consumo": 892.75,
+      "tipoConsumo": "MEDIDO",
+      "dataAtualizacao": "2024-09-21T09:15:00-03:00",
+      "situacaoMedicao": "CONSISTIDA"
+    },
+    {
+      "identificadorMedicaoConsumo": "UC123456-202410-001",
+      "codigoUnidadeConsumidora": "UC123456",
+      "codigoAgenteConcessionaria": "100005",
+      "diaReferencia": "2024-10-01",
+      "dataReferenciaConsumo": "2024-10-01T00:00:00-03:00",
+      "consumo": 0.0,
+      "tipoConsumo": "ESTIMADO",
+      "dataAtualizacao": "2024-10-05T11:00:00-03:00",
+      "situacaoMedicao": "REJEITADA"
+    }
+  ],
+  "indexProximaPagina": null
+}

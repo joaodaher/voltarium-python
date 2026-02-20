@@ -1,0 +1,16 @@
+{
+  "medicoes": [
+    {
+      "identificadorMedicaoConsumo": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "codigoUnidadeConsumidora": "UC789012",
+      "codigoAgenteConcessionaria": 400004,
+      "diaReferencia": "2024-11-01",
+      "dataReferenciaConsumo": "2024-11-01T00:00:00-03:00",
+      "consumo": 12500.0,
+      "tipoConsumo": "AJUSTADO",
+      "dataAtualizacao": "2024-11-10T16:45:22-03:00",
+      "situacaoMedicao": "CONSISTIDA"
+    }
+  ],
+  "indexProximaPagina": "eyJwYWdlIjoiMiJ9"
+}
