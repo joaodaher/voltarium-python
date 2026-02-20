@@ -54,11 +54,7 @@ def _split_datetime_range_by_month(start_str: str, end_str: str) -> list[tuple[s
 
     while current_start <= end:
         year, month = current_start.year, current_start.month
-        next_month = (
-            datetime(year + 1, 1, 1, tzinfo=tz)
-            if month == 12
-            else datetime(year, month + 1, 1, tzinfo=tz)
-        )
+        next_month = datetime(year + 1, 1, 1, tzinfo=tz) if month == 12 else datetime(year, month + 1, 1, tzinfo=tz)
         month_end = next_month - timedelta(seconds=1)
         range_end = min(month_end, end)
         ranges.append((current_start.isoformat(), range_end.isoformat()))
