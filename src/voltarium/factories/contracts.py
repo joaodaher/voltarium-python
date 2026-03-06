@@ -8,7 +8,7 @@ from factory.fuzzy import FuzzyChoice
 from faker import Faker
 
 from voltarium.models import CreateContractRequest, LegalRepresentativeWrite
-from voltarium.sandbox import RETAILERS, UTILITIES
+from voltarium.sandbox import RETAILERS, UTILITIES, generate_consumer_unit_code
 
 
 class CreateContractRequestFactory(factory.Factory):  # type: ignore
@@ -22,7 +22,9 @@ class CreateContractRequestFactory(factory.Factory):  # type: ignore
         sandbox_utility = FuzzyChoice(UTILITIES)  # type: ignore
 
     utility_agent_code = factory.LazyAttribute(lambda obj: obj.sandbox_utility.agent_code)
-    consumer_unit_code = factory.Faker("numerify", text="########")
+    consumer_unit_code = factory.LazyAttribute(
+        lambda obj: generate_consumer_unit_code(f"{obj.sandbox_utility.agent_code}{random.randint(1000, 9999)}")
+    )
     consumer_unit_address = factory.Faker("address")
     consumer_unit_name = factory.Faker("company")
     document_type = factory.Faker("random_element", elements=["CPF", "CNPJ"])

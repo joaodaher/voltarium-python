@@ -16,7 +16,7 @@ from voltarium.models.migration import (
     MigrationListItem,
     UpdateMigrationRequest,
 )
-from voltarium.sandbox import RETAILERS, UTILITIES
+from voltarium.sandbox import RETAILERS, UTILITIES, generate_consumer_unit_code
 
 fake_br = Faker("pt_BR")
 
@@ -46,7 +46,9 @@ class BaseMigrationFactory(factory.Factory):
 
     # Required fields
     migration_id = factory.Faker("uuid4")
-    consumer_unit_code = factory.Faker("numerify", text="########")
+    consumer_unit_code = factory.LazyAttribute(
+        lambda obj: generate_consumer_unit_code(f"{obj.utility_agent_code}{random.randint(1000, 9999)}")
+    )
     utility_agent_consumer_unit_code = factory.Faker("numerify", text="###")
     document_type = factory.Faker("random_element", elements=("CPF", "CNPJ"))
 
@@ -141,7 +143,9 @@ class CreateMigrationRequestFactory(factory.Factory):  # type: ignore
         utility = random.choice(UTILITIES)
         return utility.agent_code
 
-    consumer_unit_code = factory.Faker("numerify", text="########")
+    consumer_unit_code = factory.LazyAttribute(
+        lambda obj: generate_consumer_unit_code(f"{obj.utility_agent_code}{random.randint(1000, 9999)}")
+    )
     document_type = FuzzyChoice(["CNPJ", "CPF"])  # type: ignore
 
     @factory.lazy_attribute  # type: ignore
