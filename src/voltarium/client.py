@@ -162,38 +162,32 @@ class VoltariumClient:
             ServerError: If server error occurs
             VoltariumError: For other API errors
         """
-        # Get auth headers
-        auth_headers = await self._get_auth_header()
-
-        # Merge headers - start with standard headers
-        request_headers = {
-            "Accept": "application/json",
-            **auth_headers,
-        }
-
-        # Add Content-Type header for JSON requests
-        if json is not None:
-            request_headers["Content-Type"] = "application/json"
-
-        if headers:
-            request_headers.update(headers)
-
-        async def _reauthenticate(*args: Any, **kwargs: Any) -> None:
-            """Reauthenticate the client to refresh the access token."""
-            try:
-                await self._get_access_token()  # Fetch new token
-            except VoltariumError as e:
-                raise AuthenticationError(f"Reauthentication failed: {e}") from e
+        is_retry = False
 
         retry_strategy = AsyncRetrying(
             reraise=True,
             stop=stop_after_attempt(3),
             wait=wait_exponential(multiplier=1, min=4, max=10),
             retry=retry_if_exception_type(AuthenticationError),
-            after=_reauthenticate,
         )
         async for attempt in retry_strategy:
             with attempt:
+                if is_retry:
+                    # Force token refresh on retries
+                    self._token = None
+                    await self._refresh_token()
+                is_retry = True
+
+                auth_headers = await self._get_auth_header()
+                request_headers = {
+                    "Accept": "application/json",
+                    **auth_headers,
+                }
+                if json is not None:
+                    request_headers["Content-Type"] = "application/json"
+                if headers:
+                    request_headers.update(headers)
+
                 response = await self._http_client.request(
                     method=method,
                     url=path,

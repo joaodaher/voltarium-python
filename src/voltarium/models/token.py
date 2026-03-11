@@ -17,8 +17,9 @@ class Token(BaseModel):
     scope: str = ""
     refresh_expires_in: int = 0
     not_before_policy: int = Field(default=0, alias="not-before-policy")
+    created_at: float = Field(default_factory=time.time)
 
     @property
     def expires_at(self) -> float:
-        """Calculate token expiration timestamp."""
-        return time.time() + self.expires_in
+        """Token expiration timestamp (computed once from creation time)."""
+        return self.created_at + self.expires_in
